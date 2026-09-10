@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+
+{% block title %}بلوبات | درگاه کارت‌به‌کارت لحظه‌ای و خودکار بلوبانک{% endblock %}
+
+{% block extra_head %}
+<style>
+    .hero {
+        padding: 80px 24px 60px;
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 50px;
+        align-items: center;
+    }
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(37, 99, 235, 0.15);
+        border: 1px solid rgba(37, 99, 235, 0.3);
+        color: var(--accent);
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    .hero-title {
+        font-size: 42px;
+        font-weight: 900;
+        line-height: 1.3;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #ffffff, #94a3b8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero-desc {
+        font-size: 17px;
+        color: var(--text-muted);
+        line-height: 1.8;
+        margin-bottom: 32px;
+    }
+    .hero-actions {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+    /* Interactive Demo Card */
+    .preview-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 26px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        position: relative;
+    }
+    .bank-card-mock {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        border-radius: 18px;
+        padding: 22px;
+        color: white;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+    }
+    .features-grid {
+        max-width: 1200px;
+        margin: 60px auto;
+        padding: 0 24px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 24px;
+    }
+    .feature-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 28px;
+        transition: all 0.3s;
+    }
+    .feature-box:hover {
+        background: var(--bg-card-hover);
+        transform: translateY(-3px);
+        border-color: rgba(56, 189, 248, 0.3);
+    }
+    .feature-icon {
+        font-size: 32px;
+        margin-bottom: 16px;
+        display: inline-block;
+    }
+    .pricing-section {
+        max-width: 900px;
+        margin: 80px auto;
+        padding: 0 24px;
+        text-align: center;
+    }
+    .pricing-card {
+        background: linear-gradient(180deg, rgba(37, 99, 235, 0.1), rgba(19, 27, 46, 0.95));
+        border: 1px solid rgba(37, 99, 235, 0.3);
+        border-radius: 28px;
+        padding: 40px;
+        margin-top: 30px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        text-align: right;
+    }
+    .faq-section {
+        max-width: 900px;
+        margin: 80px auto;
+        padding: 0 24px;
+    }
+    .faq-item {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 14px;
+    }
+    @media (max-width: 900px) {
+        .hero { grid-template-columns: 1fr; text-align: center; padding-top: 40px; }
+        .hero-actions { justify-content: center; }
+        .pricing-card { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div>
+        <div class="hero-badge">⚡️ نسل جدید درگاه پرداخت کارت‌به‌کارت</div>
+        <h1 class="hero-title">درگاه کارت‌به‌کارت لحظه‌ای<br>بدون وابستگی به گوشی موبایل</h1>
+        <p class="hero-desc">
+            بلوبات بین کارت بلوبانک و اپلیکیشن شما قرار می‌گیرد؛ به محض واریز خریدار، تراکنش در همان ثانیه از طریق نشست فعال وب شناسایی شده و وب‌هوک تأیید برای سایت شما ارسال می‌شود.
+        </p>
+        <div class="hero-actions">
+            <a href="https://t.me/{{ bot_username or 'BluBot' }}?start=signup" target="_blank" class="btn btn-primary" style="padding: 12px 26px; font-size: 15px;">
+                📱 ثبت‌نام در مینی‌اپ تلگرام (ماه اول رایگان)
+            </a>
+            <a href="/login" class="btn btn-outline" style="padding: 12px 22px; font-size: 15px;">
+                🔑 ورود پذیرندگان
+            </a>
+            <a href="/documentation" class="btn btn-outline" style="padding: 12px 20px; font-size: 15px;">
+                📖 مستندات فنی
+            </a>
+            <a href="https://t.me/{{ bot_username or 'BluBot' }}" target="_blank" class="btn btn-outline" style="padding: 12px 20px; font-size: 15px;">
+                🤖 ربات تلگرام
+            </a>
+        </div>
+    </div>
+
+    <!-- Live Interactive Preview -->
+    <div class="preview-card">
+        <div class="bank-card-mock">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; margin-bottom: 16px;">
+                <span>بانک سامان (بلوبانک)</span>
+                <span>blu</span>
+            </div>
+            <div style="font-family: monospace; font-size: 20px; letter-spacing: 2px; text-align: center; direction: ltr; margin: 12px 0;">
+                6219 8610 1234 5678
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #cbd5e1;">
+                <span>صاحب حساب: فروشگاه شما</span>
+                <span>نشست فعال: 🟢 آنلاین</span>
+            </div>
+        </div>
+
+        <div style="background: rgba(11, 15, 25, 0.7); border-radius: 14px; padding: 16px; border: 1px dashed rgba(255,255,255,0.15);">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">
+                <span>مبلغ فاکتور:</span>
+                <span>۱۰۰,۰۰۰ تومان</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: bold; color: var(--accent);">
+                <span>مبلغ دقیق واریز (با آفست یکتا):</span>
+                <span>۱۰۰,۲۴۳ تومان</span>
+            </div>
+        </div>
+
+        <div style="margin-top: 16px; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 12px; display: flex; align-items: center; gap: 10px; color: #4ade80; font-size: 13px;">
+            <span style="font-size: 18px;">✓</span>
+            <span>واریز در ثانیه ۱۲ شناسایی شد • وب‌هوک به فروشگاه ارسال گردید.</span>
+        </div>
+    </div>
+</section>
+
+<!-- Features Grid -->
+<section class="features-grid">
+    <div class="feature-box">
+        <div class="feature-icon">⚡️</div>
+        <h3 style="color: white; margin-bottom: 10px;">تأیید لحظه‌ای (Instant)</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">
+            بدون کوچک‌ترین تأخیر؛ به محض واریز کارت‌به‌کارت توسط کاربر، فاکتور تأیید و موجودی کاربر در سایت افزایش می‌یابد.
+        </p>
+    </div>
+    <div class="feature-box">
+        <div class="feature-icon">📵</div>
+        <h3 style="color: white; margin-bottom: 10px;">بدون نیاز به گوشی و سیم‌کارت</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">
+            برخلاف SMS Forwarder، سیستم کاملاً ابری است و نیازی به گوشی اندرویدی همیشه روشن و شارژر و هزینه پیامک ندارد.
+        </p>
+    </div>
+    <div class="feature-box">
+        <div class="feature-icon">📑</div>
+        <h3 style="color: white; margin-bottom: 10px;">اطلاعات کامل فیش واریز</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">
+            استخراج نام کامل واریزکننده، شماره کارت/شبا، کد پیگیری بانکی و ساعت دقیق واریز در وب‌هوک.
+        </p>
+    </div>
+    <div class="feature-box">
+        <div class="feature-icon">🔌</div>
+        <h3 style="color: white; margin-bottom: 10px;">اتصال آسان به ووکامرس و اسکریپت‌ها</h3>
+        <p style="color: var(--text-muted); font-size: 14px;">
+            API کاملاً استاندارد سازگار با بلوپال به همراه نمونه کدهای آماده PHP، Python، Node.js و پلاگین وردپرس.
+        </p>
+    </div>
+</section>
+
+<!-- Pricing Section -->
+<section class="pricing-section" id="pricing">
+    <h2 style="font-size: 32px; color: white; margin-bottom: 12px;">تعرفه شفاف و اقتصادی</h2>
+    <p style="color: var(--text-muted);">شروع کار کاملاً رایگان است و هیچ هزینه اشتراک پنهانی وجود ندارد.</p>
+
+    <div class="pricing-card">
+        <div style="border-left: 1px solid var(--border-color); padding-left: 20px;">
+            <div style="color: var(--accent); font-weight: bold; font-size: 18px; margin-bottom: 8px;">ماه اول (تست و راه‌اندازی)</div>
+            <div style="font-size: 36px; font-weight: 900; color: white; margin-bottom: 10px;">۰ <span style="font-size: 16px; font-weight: normal; color: var(--text-muted);">تومان</span></div>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+                برای همه کاربران جدید در ماه اول، کارمزد کلیه تراکنش‌ها کاملاً صفر (رایگان) است تا با خیال راحت سیستم را روی فروشگاه خود تست کنید.
+            </p>
+        </div>
+        <div>
+            <div style="color: var(--success); font-weight: bold; font-size: 18px; margin-bottom: 8px;">از ماه دوم به بعد</div>
+            <div style="font-size: 36px; font-weight: 900; color: white; margin-bottom: 10px;">۲٪ <span style="font-size: 16px; font-weight: normal; color: var(--text-muted);">تا سقف ۳۵,۰۰۰ تومان</span></div>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+                فقط به ازای تراکنش‌های موفق، کارمزد ناچیز از کیف پول اعتباری شما کسر می‌شود. بدون هزینه ثابت ماهانه، بدون ورودی!
+            </p>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section -->
+<section class="faq-section" id="faq">
+    <h2 style="font-size: 28px; color: white; text-align: center; margin-bottom: 30px;">سوالات متداول</h2>
+
+    <div class="faq-item">
+        <h4 style="color: white; margin-bottom: 8px;">بلوبات چطور واریزی خریدار را بدون شناسه پرداخت تشخیص می‌دهد؟</h4>
+        <p style="color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+            سیستم برای هر فاکتور در بازه زمانی باز (مثلاً ۲۰ دقیقه)، یک مبلغ رندوم ۲ یا ۳ رقمی به مبلغ فاکتور اضافه می‌کند (مثلاً ۵۰,۱۴۲ تومان). چون این مبلغ در بازه فعال یکتاست، به محض واریز این عدد، فاکتور فوراً تأیید می‌گردد.
+        </p>
+    </div>
+
+    <div class="faq-item">
+        <h4 style="color: white; margin-bottom: 8px;">آیا پول مشتریان به حساب بلوبات می‌رود؟</h4>
+        <p style="color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+            خیر! بزرگ‌ترین مزیت سیستم این است که مشتری وجه را مستقیماً به کارت بلوبانک خود شما واریز می‌کند و پلتفرم هیچ دخالتی در وجوه شما ندارد (تسویه ۱۰۰٪ آنی و بدون مسدودی).
+        </p>
+    </div>
+
+    <div class="faq-item">
+        <h4 style="color: white; margin-bottom: 8px;">کارمزد سیستم چگونه دریافت می‌شود؟</h4>
+        <p style="color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+            شما در داشبورد یا ربات تلگرام یک کیف پول اعتباری دارید که آن را شارژ می‌کنید. به ازای هر فاکتوری که با موفقیت پرداخت می‌شود، کارمزد به صورت خودکار از اعتبار کیف پول کسر می‌گردد.
+        </p>
+    </div>
+</section>
+{% endblock %}

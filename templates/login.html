@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}ورود به پنل پذیرندگان | بلوبات{% endblock %}
+
+{% block extra_head %}
+<style>
+    .login-container {
+        max-width: 440px;
+        margin: 60px auto;
+        padding: 0 20px;
+    }
+    .login-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 36px 30px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        text-align: center;
+    }
+    .form-group {
+        text-align: right;
+        margin-bottom: 20px;
+    }
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+    .form-input {
+        width: 100%;
+        background: rgba(11, 15, 25, 0.7);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 12px 16px;
+        color: white;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .form-input:focus {
+        border-color: var(--primary);
+    }
+    .alert-box {
+        display: none;
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 13px;
+        margin-bottom: 18px;
+        text-align: right;
+    }
+    .alert-error {
+        background: rgba(239, 68, 68, 0.15);
+        color: #f87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="login-box">
+        <div style="margin-bottom: 16px;">
+            <img src="/static/BluBot-Logo.webp" alt="BluBot Logo" style="height: 60px; width: auto; border-radius: 14px; box-shadow: 0 4px 20px rgba(37,99,235,0.35);">
+        </div>
+        <h2 style="font-size: 22px; color: white; margin-bottom: 8px;">ورود به داشبورد بلوبات</h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 26px;">
+            جهت مشاهده فاکتورها، دریافت کلیدهای API و مدیریت وب‌هوک
+        </p>
+
+        <div id="alert-box" class="alert-box alert-error"></div>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label>شناسه کاربری (آیدی تلگرام یا شماره موبایل):</label>
+                <input type="text" id="user-identifier" class="form-input" placeholder="مثلاً: 123456789 یا 09121234567" required>
+            </div>
+
+            <div class="form-group">
+                <label>یا ورود مستقیم با کلید API:</label>
+                <input type="password" id="user-api-key" class="form-input" placeholder="blu_live_...">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 15px;">
+                ورود به داشبورد
+            </button>
+        </form>
+
+        <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-color); font-size: 13px; color: var(--text-muted); text-align: center;">
+            <div style="color: var(--warning); margin-bottom: 8px; font-weight: 600;">
+                ⚠️ هنوز در سیستم ثبت‌نام نکرده‌اید؟
+            </div>
+            <p style="margin-bottom: 14px; line-height: 1.7;">
+                ثبت‌نام در بلوبات منحصراً از طریق <b>ربات و مینی‌اپ تلگرام</b> انجام می‌شود تا احراز هویت تضمین گردد.
+            </p>
+            <a href="https://t.me/{{ bot_username or 'BluBot' }}?start=signup" target="_blank" class="btn btn-outline" style="width: 100%; border-color: rgba(56, 189, 248, 0.4); color: var(--accent); padding: 10px; font-size: 14px;">
+                📱 ثبت‌نام سریع در مینی‌اپ تلگرام
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Check URL error parameter
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.get("error") === "invalid_token") {
+    const alertBox = document.getElementById("alert-box");
+    alertBox.innerText = "لینک ورود مستقیم نامعتبر است یا منقضی شده است. لطفاً مجدداً از مینی‌اپ تلگرام درخواست دهید.";
+    alertBox.style.display = "block";
+}
+
+document.getElementById("login-form").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const identifier = document.getElementById("user-identifier").value.trim();
+    const apiKey = document.getElementById("user-api-key").value.trim();
+    const alertBox = document.getElementById("alert-box");
+
+    try {
+        const res = await fetch("/api/v1/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier: identifier, api_key: apiKey })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.href = "/dashboard";
+        } else {
+            alertBox.innerHTML = `
+                <div>${data.message || "اطلاعات ورود نامعتبر است."}</div>
+                <div style="margin-top: 8px;">
+                    <a href="https://t.me/{{ bot_username or 'BluBot' }}?start=signup" target="_blank" style="color: var(--accent); font-weight: bold; text-decoration: underline;">
+                        📱 ثبت‌نام در مینی‌اپ تلگرام
+                    </a>
+                </div>
+            `;
+            alertBox.style.display = "block";
+        }
+    } catch (err) {
+        alertBox.innerText = "خطا در برقراری ارتباط با سرور.";
+        alertBox.style.display = "block";
+    }
+});
+</script>
+{% endblock %}

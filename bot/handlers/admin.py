@@ -13,7 +13,7 @@ async def admin_panel_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     msg = (
-        "👑 <b>پنل مدیریت کل پلتفرم بلوپال</b>\n\n"
+        "👑 <b>پنل مدیریت کل پلتفرم بلوبات</b>\n\n"
         "مدیر گرامی، به پنل کنترل پلتفرم خوش آمدید.\n"
         "از دکمه‌های زیر برای بررسی آمار کلی مالی، سود حاصل از کارمزدها و مدیریت سیستم استفاده نمایید:"
     )
@@ -64,7 +64,7 @@ async def admin_stats_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     toman_fees = total_fees_rials // 10
 
     stats_msg = (
-        "📊 <b>گزارش جامع آماری پلتفرم بلوپال:</b>\n\n"
+        "📊 <b>گزارش جامع آماری پلتفرم بلوبات:</b>\n\n"
         f"👥 <b>تعداد کل کاربران ثبت‌نامی:</b> {total_users:,} کاربر\n"
         f"💳 <b>نشست‌های فعال بلوبانک:</b> {active_sessions:,} نشست\n"
         f"🧾 <b>تعداد تراکنش‌های موفق:</b> {paid_count:,} تراکنش\n"

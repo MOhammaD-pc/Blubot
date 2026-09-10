@@ -7,15 +7,32 @@ load_dotenv(BASE_DIR / ".env")
 
 # Telegram Bot
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+BOT_USERNAME = os.getenv("BOT_USERNAME", "BluBot")
 ADMIN_TELEGRAM_ID = int(os.getenv("ADMIN_TELEGRAM_ID", "0"))
 
-# Database
-DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite+aiosqlite:///{BASE_DIR}/blupal.db")
+# Database (support blubot.db or existing blupal.db)
+default_db_file = "blubot.db" if (BASE_DIR / "blubot.db").exists() or not (BASE_DIR / "blupal.db").exists() else "blupal.db"
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite+aiosqlite:///{BASE_DIR}/{default_db_file}")
 
 # Server & Public URLs
 SERVER_HOST = os.getenv("SERVER_HOST", "0.0.0.0")
 SERVER_PORT = int(os.getenv("PORT") or os.getenv("SERVER_PORT", "8000"))
-BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+
+def _clean_base_url(url: str) -> str:
+    if not url:
+        return "http://localhost:8000"
+    url = url.strip().rstrip("/")
+    if not (url.startswith("http://") or url.startswith("https://")):
+        if "localhost" in url or "127.0.0.1" in url:
+            url = f"http://{url}"
+        else:
+            url = f"https://{url}"
+    elif url.startswith("http://") and not ("localhost" in url or "127.0.0.1" in url):
+        # Telegram WebApps strictly require HTTPS. Upgrade http to https for non-local domains.
+        url = "https://" + url[7:]
+    return url
+
+BASE_URL = _clean_base_url(os.getenv("BASE_URL", "http://localhost:8000"))
 
 # Security & Encryption Key (Fernet 32-byte urlsafe base64)
 # If not set, generate or use fallback for development

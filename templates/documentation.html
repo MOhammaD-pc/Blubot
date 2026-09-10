@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}مستندات API و راهنمای اتصال | بلوبات{% endblock %}
+
+{% block extra_head %}
+<style>
+    .docs-container {
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 0 24px;
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 40px;
+    }
+    .docs-sidebar {
+        position: sticky;
+        top: 90px;
+        height: fit-content;
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 20px;
+    }
+    .docs-menu {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .docs-menu a {
+        display: block;
+        padding: 8px 12px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 14px;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    .docs-menu a:hover, .docs-menu a.active {
+        color: white;
+        background: rgba(37, 99, 235, 0.15);
+        font-weight: 600;
+    }
+    .docs-content {
+        min-width: 0;
+    }
+    .docs-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 32px;
+        margin-bottom: 30px;
+    }
+    .docs-section h2 {
+        font-size: 22px;
+        color: white;
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .docs-section h3 {
+        font-size: 17px;
+        color: var(--accent);
+        margin: 22px 0 10px;
+    }
+    .docs-section p {
+        color: var(--text-muted);
+        font-size: 15px;
+        line-height: 1.8;
+        margin-bottom: 14px;
+    }
+    .code-box {
+        background: #070a12;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 16px;
+        margin: 14px 0;
+        position: relative;
+        overflow-x: auto;
+        direction: ltr;
+        text-align: left;
+    }
+    .code-box pre {
+        font-family: Consolas, Monaco, monospace;
+        font-size: 13.5px;
+        color: #38bdf8;
+        line-height: 1.5;
+    }
+    .badge-method {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+        font-family: monospace;
+    }
+    .badge-post { background: #15803d; color: white; }
+    .badge-get { background: #1d4ed8; color: white; }
+    .table-params {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 14px;
+    }
+    .table-params th, .table-params td {
+        padding: 10px 14px;
+        border: 1px solid var(--border-color);
+        text-align: right;
+    }
+    .table-params th {
+        background: rgba(255,255,255,0.03);
+        color: white;
+    }
+    .table-params td {
+        color: var(--text-muted);
+    }
+    @media (max-width: 900px) {
+        .docs-container { grid-template-columns: 1fr; }
+        .docs-sidebar { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="docs-container">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+        <h4 style="color: white; margin-bottom: 14px; font-size: 15px;">فهرست مستندات</h4>
+        <ul class="docs-menu">
+            <li><a href="#intro">معرفی و آدرس پایه</a></li>
+            <li><a href="#auth">احراز هویت (API Key)</a></li>
+            <li><a href="#create-invoice">ایجاد فاکتور جدید</a></li>
+            <li><a href="#check-invoice">استعلام وضعیت فاکتور</a></li>
+            <li><a href="#sandbox">محیط آزمایشی (سندباکس)</a></li>
+            <li><a href="#webhook">دریافت وب‌هوک (Webhook)</a></li>
+            <li><a href="#code-samples">نمونه کدهای اتصال</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="docs-content">
+        <!-- Section: Intro -->
+        <section class="docs-section" id="intro">
+            <h2>راهنمای اتصال به وب‌سرویس بلوبات (BluBot)</h2>
+            <p>
+                وب‌سرویس بلوبات به شما امکان می‌دهد سیستم پرداخت کارت‌به‌کارت هوشمند و آنی را در وب‌سایت، اپلیکیشن یا ربات تلگرام خود راه‌اندازی کنید. تمام تراکنش‌ها بر پایه استاندارد REST و با فرمت JSON تبادل می‌شوند.
+            </p>
+            <h3>آدرس پایه (Base URL):</h3>
+            <div class="code-box">
+                <pre>{{ base_url }}/api/v1</pre>
+            </div>
+        </section>
+
+        <!-- Section: Auth -->
+        <section class="docs-section" id="auth">
+            <h2>احراز هویت (Authentication)</h2>
+            <p>
+                برای ارسال درخواست‌ها به وب‌سرویس، باید کلید API خود را که از داشبورد دریافت کرده‌اید در هدر <code>X-API-Key</code> ارسال فرمایید:
+            </p>
+            <div class="code-box">
+                <pre>X-API-Key: blu_live_YOUR_API_KEY</pre>
+            </div>
+            <p>
+                کلیدهای زنده با پیشوند <code>blu_live_</code> و کلیدهای آزمایشی با پیشوند <code>blu_test_</code> آغاز می‌شوند.
+            </p>
+        </section>
+
+        <!-- Section: Create Invoice -->
+        <section class="docs-section" id="create-invoice">
+            <h2>ایجاد فاکتور جدید</h2>
+            <p>
+                با فراخوانی این اندپوینت، یک فاکتور پرداخت ایجاد شده و شماره کارت بلوبانک به همراه مبلغ اختصاصی (با آفست چند تومانی) و لینک پرداخت به شما بازگردانده می‌شود.
+            </p>
+            <div style="display: flex; align-items: center; gap: 10px; margin: 12px 0;">
+                <span class="badge-method badge-post">POST</span>
+                <code style="color: var(--accent); font-size: 15px;">/invoices/create</code>
+            </div>
+
+            <table class="table-params">
+                <thead>
+                    <tr><th>پارامتر</th><th>نوع</th><th>اجباری</th><th>توضیحات</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>amount</code></td><td>عدد (Integer)</td><td>بله</td><td>مبلغ به ریال (حداقل ۱۰۰,۰۰۰ ریال)</td></tr>
+                    <tr><td><code>card_number</code></td><td>رشته (String)</td><td>خیر</td><td>شماره کارت دلخواه از بین کارت‌های متصل</td></tr>
+                </tbody>
+            </table>
+
+            <h3>نمونه درخواست (cURL):</h3>
+            <div class="code-box">
+<pre>curl -X POST "{{ base_url }}/api/v1/invoices/create" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: blu_live_YOUR_KEY" \
+  -d '{"amount": 1000000}'</pre>
+            </div>
+
+            <h3>نمونه پاسخ موفق:</h3>
+            <div class="code-box">
+<pre>{
+  "success": true,
+  "invoice_id": 123,
+  "amount": 1000000,
+  "final_amount": 1000245,
+  "status": "PENDING",
+  "payment_link": "{{ base_url }}/payment/01ARZ3NDEKTSV4RRFFQ69G5FAV",
+  "card_number": "6219861012345678",
+  "mode": "live",
+  "expires_at": "2026-09-10T12:30:00+03:30"
+}</pre>
+            </div>
+        </section>
+
+        <!-- Section: Check Invoice -->
+        <section class="docs-section" id="check-invoice">
+            <h2>استعلام وضعیت فاکتور</h2>
+            <div style="display: flex; align-items: center; gap: 10px; margin: 12px 0;">
+                <span class="badge-method badge-get">GET</span>
+                <code style="color: var(--accent); font-size: 15px;">/invoices/{invoice_id}</code>
+            </div>
+            <p>
+                وضعیت‌های ممکن فاکتور: <code>PENDING</code> (در انتظار پرداخت)، <code>PAID</code> (پرداخت شده)، <code>EXPIRED</code> (منقضی شده).
+            </p>
+            <div class="code-box">
+<pre>{
+  "success": true,
+  "invoice_id": 123,
+  "status": "PAID",
+  "transaction_id": 123,
+  "amount": 1000000,
+  "final_amount": 1000245,
+  "payer_name": "علی رضایی",
+  "payer_card": "6037991234567890",
+  "payer_bank_name": "بانک ملی"
+}</pre>
+            </div>
+        </section>
+
+        <!-- Section: Sandbox -->
+        <section class="docs-section" id="sandbox">
+            <h2>شبیه‌سازی در محیط آزمایشی (سندباکس)</h2>
+            <p>
+                برای تست برنامه بدون نیاز به انتقال واقعی پول، با کلید آزمایشی <code>blu_test_...</code> فاکتور بسازید و سپس با اندپوینت زیر آن را شبیه‌سازی کنید:
+            </p>
+            <div class="code-box">
+<pre>curl -X POST "{{ base_url }}/api/v1/sandbox/invoices/123/simulate" \
+  -H "Content-Type: application/json" \
+  -H "X-API-Key: blu_test_YOUR_KEY" \
+  -d '{"scenario": "success"}'</pre>
+            </div>
+        </section>
+
+        <!-- Section: Webhook -->
+        <section class="docs-section" id="webhook">
+            <h2>دریافت اعلان خودکار (Webhook)</h2>
+            <p>
+                به محض اینکه واریزی توسط سیستم تشخیص داده شود، یک درخواست <code>POST</code> با بدنه JSON به آدرس وب‌هوک فروشگاه شما ارسال می‌گردد. سرور شما باید پاسخ HTTP 200 ارسال کند:
+            </p>
+            <div class="code-box">
+<pre>{
+  "success": true,
+  "event": "payment.completed",
+  "invoice_id": 123,
+  "status": "PAID",
+  "amount": 1000000,
+  "final_amount": 1000245,
+  "payer_name": "علی رضایی",
+  "payer_card": "6037991234567890",
+  "payer_bank_name": "بانک ملی"
+}</pre>
+            </div>
+        </section>
+
+        <!-- Section: Code Samples -->
+        <section class="docs-section" id="code-samples">
+            <h2>نمونه کدهای اتصال در زبان‌های مختلف</h2>
+
+            <h3>PHP (وردپرس / ووکامرس / اسکریپت اختصاصی):</h3>
+            <div class="code-box">
+<pre>&lt;?php
+// دریافت داده‌های وب‌هوک در PHP
+$payload = json_decode(file_get_contents('php://input'), true);
+
+if ($payload && isset($payload['event']) && $payload['event'] === 'payment.completed') {
+    $invoice_id = $payload['invoice_id'];
+    $payer_name = $payload['payer_name'];
+    $final_amount = $payload['final_amount'];
+
+    // ثبت پرداخت در دیتابیس سایت و افزایش موجودی
+    
+    http_response_code(200);
+    echo json_encode(['received' => true]);
+} else {
+    http_response_code(400);
+}
+?&gt;</pre>
+            </div>
+
+            <h3>Python (FastAPI / Flask / Django):</h3>
+            <div class="code-box">
+<pre>import requests
+
+# ایجاد فاکتور جدید در پایتون
+res = requests.post(
+    "{{ base_url }}/api/v1/invoices/create",
+    headers={"X-API-Key": "blu_live_YOUR_KEY"},
+    json={"amount": 1000000}
+)
+data = res.json()
+print("لینک پرداخت مشتری:", data["payment_link"])</pre>
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}

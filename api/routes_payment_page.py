@@ -148,7 +148,7 @@ async def payment_page(token: str, db: AsyncSession = Depends(get_db)):
         <div class="bank-card">
             <div class="card-logo">
                 <span>بلوبانک سامان</span>
-                <span>بلوپال</span>
+                <span>بلوبات</span>
             </div>
             <div class="card-num" id="card-num-text">{card_formatted}</div>
             <div style="font-size: 13px; color: #cbd5e1; text-align: left;">بانک سامان (بلو)</div>

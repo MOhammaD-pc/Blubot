@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}داشبورد مدیریت پذیرنده | بلوبات{% endblock %}
+
+{% block extra_head %}
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 30px auto 60px;
+        padding: 0 24px;
+    }
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+    .stat-title {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+    .stat-value {
+        font-size: 24px;
+        font-weight: 800;
+        color: white;
+    }
+    .panel-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 30px;
+    }
+    .panel-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 26px;
+    }
+    .panel-box h3 {
+        font-size: 17px;
+        color: white;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .key-row {
+        background: rgba(11, 15, 25, 0.7);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 10px 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+    .key-text {
+        font-family: monospace;
+        font-size: 13px;
+        color: var(--accent);
+        direction: ltr;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 75%;
+    }
+    .table-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 26px;
+        overflow-x: auto;
+    }
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        text-align: right;
+    }
+    .data-table th, .data-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .data-table th {
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 13px;
+    }
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .status-paid { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
+    .status-pending { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(234, 179, 8, 0.3); }
+    .status-expired { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+    /* Modals */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(8px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .modal-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        max-width: 480px;
+        width: 100%;
+        padding: 28px;
+    }
+    @media (max-width: 900px) {
+        .panel-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Top Header & Actions -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 14px;">
+        <div>
+            <h1 style="font-size: 26px; color: white;">داشبورد پذیرنده</h1>
+            <p style="color: var(--text-muted); font-size: 14px;">خوش آمدید، {{ user.first_name or user.username or 'کاربر گرامی' }} (آیدی: {{ user.telegram_id }})</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline btn-sm" onclick="openInvoiceModal()">🧾 صدور فاکتور جدید</button>
+            <button class="btn btn-primary btn-sm" onclick="openTopupModal()">💳 افزایش اعتبار کیف پول</button>
+            <a href="/logout" class="btn btn-outline btn-sm" style="color: var(--danger);">خروج</a>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <span class="stat-title">موجودی کیف پول اعتباری</span>
+            <span class="stat-value" style="color: var(--accent);">{{ (user.wallet_balance // 10) | default(0) }} <small style="font-size: 14px;">تومان</small></span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-title">طرح کارمزد اختصاصی</span>
+            <span class="stat-value">{{ user.fee_percent }}% <small style="font-size: 14px;">(سقف {{ (user.fee_cap // 10) | default(35000) }} تومان)</small></span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-title">وضعیت طرح رایگان</span>
+            <span class="stat-value" style="font-size: 16px; color: var(--success); font-weight: bold; margin-top: 4px;">
+                {% if user.free_until and user.free_until > now %}
+                    🟢 ماه اول رایگان (کارمزد ۰)
+                {% elif user.free_transactions_left > 0 %}
+                    🟢 {{ user.free_transactions_left }} تراکنش هدیه باقی‌مانده
+                {% else %}
+                    ⚪ عادی (کسر خودکار کارمزد)
+                {% endif %}
+            </span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-title">کل فاکتورهای پرداختی</span>
+            <span class="stat-value" style="color: #4ade80;">{{ paid_count | default(0) }} <small style="font-size: 14px;">تراکنش</small></span>
+        </div>
+    </div>
+
+    <!-- Panel Grid (API Keys & Webhook) -->
+    <div class="panel-grid">
+        <!-- API Keys -->
+        <div class="panel-box">
+            <h3>🔑 کلیدهای دسترسی به وب‌سرویس (API Keys)</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                این کلیدها را در هدر <code>X-API-Key</code> درخواست‌های فروشگاه خود ارسال کنید.
+            </p>
+
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">کلید زنده (Live API Key):</div>
+            <div class="key-row">
+                <span class="key-text" id="live-key">{{ user.api_key_live }}</span>
+                <button class="btn btn-outline btn-sm" onclick="copyValue('{{ user.api_key_live }}')">کپی</button>
+            </div>
+
+            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">کلید آزمایشی (Sandbox Key):</div>
+            <div class="key-row">
+                <span class="key-text" id="test-key">{{ user.api_key_test }}</span>
+                <button class="btn btn-outline btn-sm" onclick="copyValue('{{ user.api_key_test }}')">کپی</button>
+            </div>
+
+            <button class="btn btn-outline btn-sm" style="margin-top: 8px; width: 100%;" onclick="regenerateKeys()">
+                🔄 ابطال و صدور مجدد کلیدها
+            </button>
+        </div>
+
+        <!-- Webhook Settings -->
+        <div class="panel-box">
+            <h3>📡 تنظیمات اعلان آنی (Webhook URL)</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">
+                پس از تأیید واریز، سرور ما بلافاصله اطلاعات فیش را به این آدرس POST می‌کند:
+            </p>
+
+            <form id="webhook-form" style="display: flex; flex-direction: column; gap: 12px;">
+                <input type="url" id="webhook-input" class="form-input" style="background: rgba(11,15,25,0.7); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 14px; color: white; direction: ltr;" placeholder="https://yoursite.com/api/blubot/webhook" value="{{ user.webhook_url or '' }}">
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary btn-sm" style="flex: 1;">💾 ذخیره آدرس وب‌هوک</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="testWebhook()">🧪 ارسال وب‌هوک تستی</button>
+                </div>
+            </form>
+
+            <!-- Bank Session Status -->
+            <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 14px; font-weight: bold; color: white;">نشست بلوبانک متصل:</span>
+                    {% if session %}
+                        <span style="font-size: 13px; color: #4ade80;">🟢 کارت {{ session.card_number }}</span>
+                    {% else %}
+                        <span style="font-size: 13px; color: #f87171;">🔴 هنوز کارتی متصل نشده</span>
+                    {% endif %}
+                </div>
+                <p style="color: var(--text-muted); font-size: 12px; margin-top: 6px;">
+                    برای اتصال یا تغییر کارت، از دستور <b>حساب‌ها و نشست‌ها</b> در <a href="https://t.me/{{ bot_username or 'BluBot' }}" target="_blank" style="color: var(--accent);">ربات تلگرام</a> استفاده کنید.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Invoices Table -->
+    <div class="table-box">
+        <h3 style="color: white; margin-bottom: 16px;">🧾 آخرین فاکتورها و تراکنش‌های دریافتی</h3>
+        {% if invoices %}
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>شناسه</th>
+                    <th>مبلغ درخواستی</th>
+                    <th>مبلغ دقیق (با آفست)</th>
+                    <th>وضعیت</th>
+                    <th>واریزکننده</th>
+                    <th>کد رهگیری</th>
+                    <th>تاریخ</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inv in invoices %}
+                <tr>
+                    <td><code>#{{ inv.id }}</code></td>
+                    <td>{{ (inv.base_amount // 10) | default(0) }} تومان</td>
+                    <td style="color: var(--accent); font-weight: bold;">{{ (inv.final_amount // 10) | default(0) }} تومان</td>
+                    <td>
+                        {% if inv.status == 'PAID' %}
+                            <span class="status-badge status-paid">✓ پرداخت شد</span>
+                        {% elif inv.status == 'PENDING' %}
+                            <span class="status-badge status-pending">در انتظار</span>
+                        {% else %}
+                            <span class="status-badge status-expired">منقضی</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ inv.payer_name or '---' }}</td>
+                    <td><code>{{ inv.bank_track_id or '---' }}</code></td>
+                    <td style="font-size: 12px; color: var(--text-muted);">{{ inv.created_at.strftime('%Y/%m/%d %H:%M') }}</td>
+                    <td>
+                        <a href="/payment/{{ inv.public_token }}" target="_blank" class="btn btn-outline btn-sm" style="font-size: 12px; padding: 4px 8px;">
+                            مشاهده درگاه
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p style="color: var(--text-muted); text-align: center; padding: 30px;">هنوز فاکتوری صادر نشده است. با زدن دکمه «صدور فاکتور جدید» اولین فاکتور را ایجاد کنید.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal: Create Quick Invoice -->
+<div id="invoice-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="color: white; margin-bottom: 14px;">🧾 صدور فاکتور پرداخت سریع</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 18px;">
+            مبلغ مورد نظر را به تومان وارد کنید تا لینک صفحه پرداخت به همراه مبلغ آفست‌دار تولید شود:
+        </p>
+        <form id="create-invoice-form">
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">مبلغ (تومان):</label>
+                <input type="number" id="modal-invoice-amount" class="form-input" style="width: 100%; background: #070a12; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; color: white;" placeholder="مثلاً: 50000" min="10000" required>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary btn-sm" style="flex: 1;">ایجاد فاکتور</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="closeModals()">انصراف</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal: Top-up Wallet -->
+<div id="topup-modal" class="modal-overlay">
+    <div class="modal-card">
+        <h3 style="color: white; margin-bottom: 14px;">💳 افزایش اعتبار کیف پول</h3>
+        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 18px;">
+            مبلغ مورد نظر را جهت شارژ کیف پول اعتباری خود انتخاب فرمایید:
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px;">
+            <button class="btn btn-outline btn-sm" onclick="submitTopup(50000)">۵۰,۰۰۰ تومان</button>
+            <button class="btn btn-outline btn-sm" onclick="submitTopup(100000)">۱۰۰,۰۰۰ تومان</button>
+            <button class="btn btn-outline btn-sm" onclick="submitTopup(200000)">۲۰۰,۰۰۰ تومان</button>
+            <button class="btn btn-outline btn-sm" onclick="submitTopup(500000)">۵۰۰,۰۰۰ تومان</button>
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" style="width: 100%;" onclick="closeModals()">انصراف</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function copyValue(val) {
+    navigator.clipboard.writeText(val);
+    alert("کپی شد!");
+}
+
+function openInvoiceModal() { document.getElementById("invoice-modal").style.display = "flex"; }
+function openTopupModal() { document.getElementById("topup-modal").style.display = "flex"; }
+function closeModals() {
+    document.getElementById("invoice-modal").style.display = "none";
+    document.getElementById("topup-modal").style.display = "none";
+}
+
+document.getElementById("webhook-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const url = document.getElementById("webhook-input").value.trim();
+    const res = await fetch("/api/v1/dashboard/webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhook_url: url })
+    });
+    const data = await res.json();
+    if (data.success) alert("آدرس وب‌هوک با موفقیت ذخیره شد.");
+    else alert("خطا در ذخیره وب‌هوک: " + data.message);
+});
+
+async function testWebhook() {
+    const res = await fetch("/api/v1/dashboard/webhook/test", { method: "POST" });
+    const data = await res.json();
+    alert(data.message);
+}
+
+async function regenerateKeys() {
+    if (!confirm("آیا مطمئن هستید؟ کلیدهای قبلی از کار خواهند افتاد.")) return;
+    const res = await fetch("/api/v1/dashboard/keys/regenerate", { method: "POST" });
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById("live-key").innerText = data.api_key_live;
+        document.getElementById("test-key").innerText = data.api_key_test;
+        alert("کلیدهای جدید با موفقیت صادر شدند.");
+    }
+}
+
+document.getElementById("create-invoice-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const toman = document.getElementById("modal-invoice-amount").value;
+    const rials = toman * 10;
+    const res = await fetch("/api/v1/dashboard/invoices/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: rials })
+    });
+    const data = await res.json();
+    if (data.success) {
+        closeModals();
+        window.open(data.payment_link, "_blank");
+        location.reload();
+    } else {
+        alert("خطا: " + (data.message || data.error));
+    }
+});
+
+async function submitTopup(toman) {
+    const res = await fetch("/api/v1/dashboard/wallet/topup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: toman * 10 })
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert("کیف پول شما با موفقیت شارژ شد.");
+        location.reload();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مینی‌اپ بلوبات | مدیریت درگاه</title>
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Vazirmatn Font CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+    <style>
+        :root {
+            --tg-bg: var(--tg-theme-bg-color, #0b0f19);
+            --tg-secondary-bg: var(--tg-theme-secondary-bg-color, #131b2e);
+            --tg-text: var(--tg-theme-text-color, #f8fafc);
+            --tg-hint: var(--tg-theme-hint-color, #94a3b8);
+            --tg-btn: var(--tg-theme-button-color, #2563eb);
+            --tg-btn-text: var(--tg-theme-button-text-color, #ffffff);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent: #38bdf8;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: var(--tg-bg);
+            color: var(--tg-text);
+            padding: 16px;
+            padding-bottom: 40px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .header-card {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(19, 27, 46, 0.95));
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 20px;
+            padding: 18px 20px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--tg-btn);
+            color: var(--tg-btn-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        .user-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--tg-text);
+        }
+        .user-sub {
+            font-size: 12px;
+            color: var(--tg-hint);
+            direction: ltr;
+            text-align: right;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-success {
+            background: rgba(34, 197, 94, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        .badge-warning {
+            background: rgba(234, 179, 8, 0.15);
+            color: #facc15;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+        .card {
+            background: var(--tg-secondary-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--tg-text);
+        }
+        .balance-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--tg-text);
+            margin: 6px 0 12px;
+        }
+        .balance-currency {
+            font-size: 14px;
+            font-weight: normal;
+            color: var(--tg-hint);
+            margin-right: 4px;
+        }
+        .btn-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .btn {
+            background: var(--tg-btn);
+            color: var(--tg-btn-text);
+            border: none;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: opacity 0.2s;
+            width: 100%;
+        }
+        .btn:active {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--tg-text);
+            border: 1px solid var(--card-border);
+        }
+        .btn-sm {
+            padding: 6px 10px;
+            font-size: 12px;
+            border-radius: 8px;
+            width: auto;
+        }
+        .key-box {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+        .key-text {
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--accent);
+            direction: ltr;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+        .form-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            color: var(--tg-text);
+            font-size: 13px;
+            outline: none;
+            margin-bottom: 10px;
+            direction: ltr;
+            text-align: left;
+        }
+        .form-input:focus {
+            border-color: var(--tg-btn);
+        }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e293b;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            font-size: 13px;
+            display: none;
+            z-index: 1000;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .dot-green { background-color: #22c55e; }
+        .dot-gray { background-color: #64748b; }
+        .dot-yellow { background-color: #eab308; }
+        .invoice-item {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .invoice-amount {
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .magic-link-box {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(19, 27, 46, 0.9));
+            border: 1px dashed rgba(168, 85, 247, 0.4);
+            border-radius: 16px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- Loading State -->
+    <div id="loading-screen" style="text-align: center; padding: 60px 20px;">
+        <div style="font-size: 36px; margin-bottom: 16px;">⚡️</div>
+        <h3 style="font-size: 16px; color: var(--tg-text); margin-bottom: 8px;">در حال احراز هویت با تلگرام...</h3>
+        <p style="color: var(--tg-hint); font-size: 13px;">لطفاً چند لحظه شکیبا باشید</p>
+    </div>
+
+    <!-- Main Content -->
+    <div id="app-content" style="display: none;">
+
+        <!-- Header / Merchant Profile -->
+        <div class="header-card">
+            <div class="user-info">
+                <img src="/static/BluBot-Logo.webp" alt="BluBot Logo" style="width: 46px; height: 46px; border-radius: 12px; object-fit: cover; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);">
+                <div>
+                    <div class="user-name" id="u-name">پذیرنده بلوبات</div>
+                    <div class="user-sub" id="u-handle">@user</div>
+                </div>
+            </div>
+            <div id="u-badge-container">
+                <span class="badge badge-success" id="u-plan-badge">ماه اول رایگان</span>
+            </div>
+        </div>
+
+        <!-- 1-Click Desktop Login Banner -->
+        <div class="magic-link-box">
+            <div style="font-weight: 700; margin-bottom: 6px; color: #d8b4fe;">🖥 ورود به نسخه وب (کامپیوتر)</div>
+            <p style="font-size: 12px; color: var(--tg-hint); margin-bottom: 12px;">
+                می‌خواهید پنل را روی کامپیوتر یا مرورگر باز کنید؟ با یک کلیک لینک ورود بدون رمز بسازید:
+            </p>
+            <button class="btn btn-outline" style="border-color: rgba(168, 85, 247, 0.4); color: #e9d5ff;" onclick="generateMagicLink()">
+                🔗 دریافت لینک ورود مستقیم به وب
+            </button>
+            <div id="magic-link-result" style="display: none; margin-top: 12px;">
+                <input type="text" id="magic-url-input" class="form-input" readonly>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-sm" onclick="copyMagicLink()" style="flex: 1;">کپی لینک</button>
+                    <a id="magic-url-btn" target="_blank" class="btn btn-sm btn-outline" style="flex: 1; text-decoration: none;">باز کردن مرورگر</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallet Card -->
+        <div class="card">
+            <div class="card-title">
+                <span>👛</span>
+                <span>کیف پول و اعتبار</span>
+            </div>
+            <div style="font-size: 12px; color: var(--tg-hint);">موجودی قابل استفاده جهت کسر کارمزد:</div>
+            <div class="balance-value">
+                <span id="w-balance">۰</span>
+                <span class="balance-currency">تومان</span>
+            </div>
+            <div style="font-size: 12px; color: var(--tg-hint); margin-bottom: 10px;">
+                افزایش موجودی سریع:
+            </div>
+            <div class="btn-grid">
+                <button class="btn btn-outline btn-sm" onclick="quickTopup(100000)">۱۰ هزار</button>
+                <button class="btn btn-outline btn-sm" onclick="quickTopup(500000)">۵۰ هزار</button>
+                <button class="btn btn-outline btn-sm" onclick="quickTopup(1000000)">۱۰۰ هزار</button>
+                <button class="btn btn-outline btn-sm" onclick="quickTopup(2000000)">۲۰۰ هزار</button>
+            </div>
+        </div>
+
+        <!-- Bank Connection Card -->
+        <div class="card">
+            <div class="card-title" style="justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>💳</span>
+                    <span>نشست بلوبانک (حساب مقصد)</span>
+                </div>
+                <div id="session-status-pill" class="status-pill">
+                    <span class="status-dot dot-gray"></span>
+                    <span style="font-size: 11px; color: var(--tg-hint);">عدم اتصال</span>
+                </div>
+            </div>
+            <div id="session-info-content" style="background: rgba(0,0,0,0.25); border-radius: 12px; padding: 12px; margin-top: 8px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
+                    <span style="color: var(--tg-hint);">شماره کارت بلوبانک:</span>
+                    <span id="sess-card" style="font-family: monospace; font-weight: bold; direction: ltr;">-</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                    <span style="color: var(--tg-hint);">صاحب حساب:</span>
+                    <span id="sess-owner">-</span>
+                </div>
+            </div>
+            <div style="font-size: 11px; color: var(--tg-hint); margin-top: 8px;">
+                💡 جهت تغییر یا اتصال نشست جدید، می‌توانید از دستور /start در ربات تلگرام استفاده کنید.
+            </div>
+        </div>
+
+        <!-- API Keys Card -->
+        <div class="card">
+            <div class="card-title" style="justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>🔑</span>
+                    <span>کلیدهای دسترسی (API Keys)</span>
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="regenKeys()">صدور مجدد</button>
+            </div>
+
+            <div style="font-size: 12px; color: var(--tg-hint); margin-bottom: 4px;">کلید زنده (Live):</div>
+            <div class="key-box">
+                <span class="key-text" id="api-key-live">...</span>
+                <button class="btn btn-sm" onclick="copyText(document.getElementById('api-key-live').innerText, 'کلید Live کپی شد')">کپی</button>
+            </div>
+
+            <div style="font-size: 12px; color: var(--tg-hint); margin-bottom: 4px;">کلید تستی (Sandbox):</div>
+            <div class="key-box">
+                <span class="key-text" id="api-key-test">...</span>
+                <button class="btn btn-sm" onclick="copyText(document.getElementById('api-key-test').innerText, 'کلید Sandbox کپی شد')">کپی</button>
+            </div>
+        </div>
+
+        <!-- Webhook Settings Card -->
+        <div class="card">
+            <div class="card-title">
+                <span>🌐</span>
+                <span>تنظیمات وب‌هوک (Webhook)</span>
+            </div>
+            <p style="font-size: 12px; color: var(--tg-hint); margin-bottom: 8px;">
+                آدرس اندپوینت وب‌هوک سایت شما جهت دریافت آنی تاییدیه واریزها:
+            </p>
+            <input type="url" id="webhook-url-input" class="form-input" placeholder="https://yoursite.com/api/payment/webhook">
+            <div style="display: flex; gap: 8px;">
+                <button class="btn" style="flex: 1;" onclick="saveWebhook()">ذخیره وب‌هوک</button>
+                <button class="btn btn-outline" style="flex: 1;" onclick="testWebhook()">ارسال تست</button>
+            </div>
+            <div id="webhook-result" style="margin-top: 8px; font-size: 12px; display: none;"></div>
+        </div>
+
+        <!-- Quick Invoice Generator -->
+        <div class="card">
+            <div class="card-title">
+                <span>🧾</span>
+                <span>صدور فاکتور سریع</span>
+            </div>
+            <div style="margin-bottom: 8px;">
+                <label style="font-size: 12px; color: var(--tg-hint); display: block; margin-bottom: 4px;">مبلغ فاکتور به تومان:</label>
+                <input type="number" id="quick-amount-input" class="form-input" placeholder="مثلاً: ۵۰۰۰۰" style="direction: ltr; text-align: right;">
+            </div>
+            <button class="btn" onclick="createQuickInvoice()">ایجاد لینک پرداخت کارت‌به‌کارت</button>
+
+            <div id="invoice-result" style="display: none; margin-top: 12px; background: rgba(0,0,0,0.25); border-radius: 12px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px;">
+                    <span style="color: var(--tg-hint);">مبلغ نهایی با آفست:</span>
+                    <span id="inv-final-amt" style="font-weight: bold; color: var(--accent);">-</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <input type="text" id="inv-link-input" class="form-input" style="margin-bottom: 0;" readonly>
+                    <button class="btn btn-sm" onclick="copyText(document.getElementById('inv-link-input').value, 'لینک پرداخت کپی شد')">کپی</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Invoices List -->
+        <div class="card">
+            <div class="card-title">
+                <span>📊</span>
+                <span>آخرین تراکنش‌ها</span>
+            </div>
+            <div id="invoices-list">
+                <div style="color: var(--tg-hint); text-align: center; font-size: 13px; padding: 10px;">در حال بارگذاری تراکنش‌ها...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        let currentUser = null;
+
+        // Notify Telegram that the Web App is ready
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            if (tg.setHeaderColor) tg.setHeaderColor('secondary_bg_color');
+            if (tg.setBackgroundColor) tg.setBackgroundColor('bg_color');
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById("toast");
+            toast.innerText = text;
+            toast.style.display = "block";
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+            setTimeout(() => { toast.style.display = "none"; }, 2500);
+        }
+
+        function copyText(text, msg) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(msg || "کپی شد!");
+            }).catch(() => {
+                // Fallback
+                const input = document.createElement("input");
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand("copy");
+                document.body.removeChild(input);
+                showToast(msg || "کپی شد!");
+            });
+        }
+
+        // Initialize Authentication
+        async function initAuth() {
+            let initData = tg?.initData || "";
+
+            // Offline Dev Mock if running outside Telegram
+            if (!initData) {
+                console.log("No initData found. Running in browser/dev mode.");
+                // Provide fallback initData mock
+                initData = "auth_date=1700000000&query_id=AAH&user=" + encodeURIComponent(JSON.stringify({
+                    id: 999999999,
+                    first_name: "کاربر تستی",
+                    username: "test_dev"
+                }));
+            }
+
+            try {
+                const res = await fetch("/api/v1/auth/miniapp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ init_data: initData })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    currentUser = data.user;
+                    if (data.is_new) {
+                        showToast("🎉 ثبت‌نام با موفقیت انجام شد! ماه اول رایگان فعال شد.");
+                    }
+                    await refreshAppData();
+                    document.getElementById("loading-screen").style.display = "none";
+                    document.getElementById("app-content").style.display = "block";
+                } else {
+                    document.getElementById("loading-screen").innerHTML = `
+                        <div style="color: var(--danger); font-size: 32px; margin-bottom: 12px;">⚠️</div>
+                        <h3 style="color: var(--danger); font-size: 15px; margin-bottom: 6px;">خطا در احراز هویت تلگرام</h3>
+                        <p style="color: var(--tg-hint); font-size: 12px;">${data.message || "لطفاً مجدداً از طریق ربات تلگرام وارد شوید."}</p>
+                    `;
+                }
+            } catch (err) {
+                console.error("Auth error:", err);
+                document.getElementById("loading-screen").innerHTML = `
+                    <div style="color: var(--danger); font-size: 32px; margin-bottom: 12px;">⚠️</div>
+                    <h3 style="color: var(--danger); font-size: 15px; margin-bottom: 6px;">خطا در ارتباط با سرور</h3>
+                    <p style="color: var(--tg-hint); font-size: 12px;">اتصال اینترنت خود را بررسی نمایید.</p>
+                `;
+            }
+        }
+
+        // Fetch fresh state from backend
+        async function refreshAppData() {
+            try {
+                const res = await fetch("/api/v1/miniapp/data");
+                const data = await res.json();
+                if (!data.success) return;
+
+                const user = data.user;
+                const session = data.session;
+                const invoices = data.invoices;
+
+                // Profile
+                document.getElementById("u-name").innerText = user.first_name || "پذیرنده بلوبات";
+                document.getElementById("u-avatar").innerText = (user.first_name || "ب").charAt(0);
+                document.getElementById("u-handle").innerText = user.username ? `@${user.username}` : `ID: ${user.telegram_id}`;
+
+                // Wallet
+                const toman = Math.floor(user.wallet_balance / 10);
+                document.getElementById("w-balance").innerText = toman.toLocaleString('fa-IR');
+
+                // Plan badge
+                if (user.free_until && new Date(user.free_until) > new Date()) {
+                    document.getElementById("u-plan-badge").innerText = "ماه اول رایگان (کارمزد ۰)";
+                    document.getElementById("u-plan-badge").className = "badge badge-success";
+                } else {
+                    document.getElementById("u-plan-badge").innerText = `کارمزد ${user.fee_percent}٪`;
+                    document.getElementById("u-plan-badge").className = "badge badge-warning";
+                }
+
+                // Keys
+                document.getElementById("api-key-live").innerText = user.api_key_live || "-";
+                document.getElementById("api-key-test").innerText = user.api_key_test || "-";
+
+                // Webhook
+                if (user.webhook_url) {
+                    document.getElementById("webhook-url-input").value = user.webhook_url;
+                }
+
+                // Bank Session
+                const pill = document.getElementById("session-status-pill");
+                if (session && session.status === "ACTIVE") {
+                    pill.innerHTML = '<span class="status-dot dot-green"></span><span style="font-size: 11px; color: #4ade80;">متصل و فعال</span>';
+                    document.getElementById("sess-card").innerText = session.card_number;
+                    document.getElementById("sess-owner").innerText = session.account_name || "بلوبانک";
+                } else {
+                    pill.innerHTML = '<span class="status-dot dot-gray"></span><span style="font-size: 11px; color: var(--tg-hint);">عدم اتصال</span>';
+                    document.getElementById("sess-card").innerText = "کارت متصل نیست";
+                    document.getElementById("sess-owner").innerText = "-";
+                }
+
+                // Invoices
+                renderInvoices(invoices);
+
+            } catch (err) {
+                console.error("Refresh error:", err);
+            }
+        }
+
+        function renderInvoices(invoices) {
+            const container = document.getElementById("invoices-list");
+            if (!invoices || invoices.length === 0) {
+                container.innerHTML = '<div style="color: var(--tg-hint); text-align: center; font-size: 13px; padding: 14px;">هنوز فاکتوری صادر نشده است.</div>';
+                return;
+            }
+
+            container.innerHTML = invoices.map(inv => {
+                let badgeClass = "badge-warning";
+                let statusText = "در انتظار پرداخت";
+                if (inv.status === "PAID") {
+                    badgeClass = "badge-success";
+                    statusText = "پرداخت شد ✓";
+                } else if (inv.status === "EXPIRED") {
+                    badgeClass = "badge-danger";
+                    statusText = "منقضی شد";
+                }
+                const toman = Math.floor(inv.final_amount / 10).toLocaleString('fa-IR');
+                return `
+                    <div class="invoice-item">
+                        <div>
+                            <div class="invoice-amount">${toman} تومان</div>
+                            <div style="font-size: 11px; color: var(--tg-hint);">${inv.payer_name ? inv.payer_name : 'فاکتور #' + inv.id}</div>
+                        </div>
+                        <span class="badge ${badgeClass}">${statusText}</span>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        async function quickTopup(amountRials) {
+            if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+            try {
+                const res = await fetch("/api/v1/dashboard/wallet/topup", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ amount: amountRials })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`شارژ با موفقیت انجام شد (+${(amountRials / 10).toLocaleString('fa-IR')} تومان)`);
+                    await refreshAppData();
+                }
+            } catch (err) {
+                showToast("خطا در شارژ کیف پول");
+            }
+        }
+
+        async function regenKeys() {
+            if (!confirm("آیا از صدور مجدد کلیدها اطمینان دارید؟ کلیدهای قبلی از کار خواهند افتاد.")) return;
+            try {
+                const res = await fetch("/api/v1/dashboard/keys/regenerate", { method: "POST" });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById("api-key-live").innerText = data.api_key_live;
+                    document.getElementById("api-key-test").innerText = data.api_key_test;
+                    showToast("کلیدهای جدید صادر شدند.");
+                }
+            } catch (err) {
+                showToast("خطا در صدور کلیدها.");
+            }
+        }
+
+        async function saveWebhook() {
+            const url = document.getElementById("webhook-url-input").value.trim();
+            if (!url) {
+                showToast("لطفاً آدرس وب‌هوک را وارد کنید.");
+                return;
+            }
+            try {
+                const res = await fetch("/api/v1/dashboard/webhook", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ webhook_url: url })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("آدرس وب‌هوک ذخیره شد.");
+                }
+            } catch (err) {
+                showToast("خطا در ذخیره وب‌هوک.");
+            }
+        }
+
+        async function testWebhook() {
+            const resBox = document.getElementById("webhook-result");
+            resBox.style.display = "block";
+            resBox.innerHTML = '<span style="color: var(--tg-hint);">در حال ارسال درخواست تستی...</span>';
+            try {
+                const res = await fetch("/api/v1/dashboard/webhook/test", { method: "POST" });
+                const data = await res.json();
+                if (data.success) {
+                    resBox.innerHTML = `<span style="color: #4ade80;">✓ ${data.message}</span>`;
+                } else {
+                    resBox.innerHTML = `<span style="color: #f87171;">✗ ${data.message}</span>`;
+                }
+            } catch (err) {
+                resBox.innerHTML = '<span style="color: #f87171;">خطا در ارسال تست وب‌هوک.</span>';
+            }
+        }
+
+        async function createQuickInvoice() {
+            const toman = parseInt(document.getElementById("quick-amount-input").value);
+            if (!toman || toman < 1000) {
+                showToast("لطفاً مبلغ معتبر (حداقل ۱۰۰۰ تومان) وارد کنید.");
+                return;
+            }
+            try {
+                const res = await fetch("/api/v1/dashboard/invoices/create", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ amount: toman * 10 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById("inv-final-amt").innerText = `${(data.final_amount / 10).toLocaleString('fa-IR')} تومان`;
+                    document.getElementById("inv-link-input").value = data.payment_link;
+                    document.getElementById("invoice-result").style.display = "block";
+                    showToast("فاکتور ایجاد شد!");
+                    await refreshAppData();
+                } else {
+                    showToast("خطا در صدور فاکتور");
+                }
+            } catch (err) {
+                showToast("خطا در ارتباط با سرور");
+            }
+        }
+
+        async function generateMagicLink() {
+            try {
+                const res = await fetch("/api/v1/auth/magic-link", { method: "POST" });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById("magic-url-input").value = data.verify_url;
+                    document.getElementById("magic-url-btn").href = data.verify_url;
+                    document.getElementById("magic-link-result").style.display = "block";
+                    showToast("لینک اختصاصی ورود ساخته شد!");
+                }
+            } catch (err) {
+                showToast("خطا در ساخت لینک ورود به وب");
+            }
+        }
+
+        function copyMagicLink() {
+            const url = document.getElementById("magic-url-input").value;
+            copyText(url, "لینک ورود مستقیم کپی شد. آن را در مرورگر کامپیوتر خود باز کنید.");
+        }
+
+        // Run auth on load
+        window.addEventListener("DOMContentLoaded", initAuth);
+    </script>
+</body>
+</html>

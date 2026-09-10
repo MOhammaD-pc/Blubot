@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}پنل مدیریت کل پلتفرم | بلوبات{% endblock %}
+
+{% block extra_head %}
+<style>
+    .admin-container {
+        max-width: 1200px;
+        margin: 30px auto 60px;
+        padding: 0 24px;
+    }
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 18px;
+        padding: 22px;
+    }
+    .stat-val {
+        font-size: 26px;
+        font-weight: 800;
+        margin-top: 8px;
+    }
+    .users-table-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 26px;
+        overflow-x: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div style="margin-bottom: 26px;">
+        <span class="logo-badge" style="background: #9333ea;">مدیر ارشد</span>
+        <h1 style="font-size: 26px; color: white; margin-top: 8px;">پنل مدیریت و نظارت کل پلتفرم بلوبات</h1>
+        <p style="color: var(--text-muted); font-size: 14px;">گزارش زنده گردش مالی، سود کارمزدها و پذیرندگان سیستم</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <span style="color: var(--text-muted); font-size: 13px;">مجموع درآمد کارمزد پلتفرم</span>
+            <div class="stat-val" style="color: #4ade80;">{{ (total_fees // 10) | default(0) }} <small style="font-size: 14px;">تومان</small></div>
+        </div>
+        <div class="stat-card">
+            <span style="color: var(--text-muted); font-size: 13px;">مجموع گردش مالی عبوری</span>
+            <div class="stat-val" style="color: var(--accent);">{{ (total_volume // 10) | default(0) }} <small style="font-size: 14px;">تومان</small></div>
+        </div>
+        <div class="stat-card">
+            <span style="color: var(--text-muted); font-size: 13px;">تعداد کل تراکنش‌های موفق</span>
+            <div class="stat-val" style="color: white;">{{ paid_invoices_count | default(0) }}</div>
+        </div>
+        <div class="stat-card">
+            <span style="color: var(--text-muted); font-size: 13px;">تعداد پذیرندگان ثبت‌نامی</span>
+            <div class="stat-val" style="color: white;">{{ total_users | default(0) }} <small style="font-size: 14px;">فروشگاه</small></div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="users-table-box">
+        <h3 style="color: white; margin-bottom: 16px;">👥 لیست پذیرندگان و فروشگاه‌های فعال</h3>
+        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); text-align: right;">
+                    <th style="padding: 10px; color: var(--text-muted);">شناسه</th>
+                    <th style="padding: 10px; color: var(--text-muted);">نام / نام کاربری</th>
+                    <th style="padding: 10px; color: var(--text-muted);">آیدی تلگرام</th>
+                    <th style="padding: 10px; color: var(--text-muted);">مانده کیف پول</th>
+                    <th style="padding: 10px; color: var(--text-muted);">نرخ کارمزد</th>
+                    <th style="padding: 10px; color: var(--text-muted);">سقف کارمزد</th>
+                    <th style="padding: 10px; color: var(--text-muted);">عملیات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 12px 10px;"><code>#{{ u.id }}</code></td>
+                    <td style="padding: 12px 10px;">{{ u.first_name or u.username or 'کاربر' }}</td>
+                    <td style="padding: 12px 10px;"><code>{{ u.telegram_id }}</code></td>
+                    <td style="padding: 12px 10px; color: var(--accent);">{{ (u.wallet_balance // 10) | default(0) }} ت</td>
+                    <td style="padding: 12px 10px;">{{ u.fee_percent }}%</td>
+                    <td style="padding: 12px 10px;">{{ (u.fee_cap // 10) | default(35000) }} ت</td>
+                    <td style="padding: 12px 10px;">
+                        <button class="btn btn-outline btn-sm" onclick="editFee({{ u.id }}, {{ u.fee_percent }}, {{ u.fee_cap // 10 }})">تنظیم کارمزد</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function editFee(userId, currentRate, currentCap) {
+    const rate = prompt("درصد کارمزد جدید را وارد کنید (مثلاً 1.5 یا 2.0):", currentRate);
+    if (!rate) return;
+    const capToman = prompt("سقف کارمزد را به تومان وارد کنید (مثلاً 35000):", currentCap);
+    if (!capToman) return;
+
+    const res = await fetch(`/api/v1/admin/user/${userId}/fee`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fee_percent: parseFloat(rate), fee_cap: parseInt(capToman) * 10 })
+    });
+    const data = await res.json();
+    if (data.success) {
+        alert("کارمزد کاربر به‌روزرسانی شد.");
+        location.reload();
+    } else {
+        alert("خطا در به‌روزرسانی.");
+    }
+}
+</script>
+{% endblock %}

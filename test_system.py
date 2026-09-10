@@ -39,6 +39,11 @@ async def run_tests():
 
         # 3. Wallet and Commission Engine
         print("\n[3] Testing Commission Engine & Free Trial Logic...")
+        # Reset trial for idempotence in test
+        user.free_until = datetime.datetime.utcnow() + datetime.timedelta(days=30)
+        user.free_transactions_left = 50
+        await db.commit()
+
         # Free trial test:
         fee_trial, reason_trial = WalletService.calculate_commission(user, 10_000_000)  # 1,000,000 Tomans
         assert fee_trial == 0, f"Expected 0 during trial, got {fee_trial}"

@@ -4,7 +4,7 @@ from telegram.ext import (
     CallbackQueryHandler, filters
 )
 import config
-from bot.handlers.start import start_handler, help_handler
+from bot.handlers.start import start_handler, help_handler, miniapp_menu_handler
 from bot.handlers.bank import (
     bank_menu_handler,
     get_connect_conversation_handler,
@@ -46,6 +46,7 @@ def create_bot_application() -> Application:
     # Commands
     app.add_handler(CommandHandler("start", start_handler))
     app.add_handler(CommandHandler("help", help_handler))
+    app.add_handler(CommandHandler(["miniapp", "app", "panel"], miniapp_menu_handler))
 
     # Conversation Handlers
     app.add_handler(get_connect_conversation_handler())
@@ -54,6 +55,7 @@ def create_bot_application() -> Application:
     app.add_handler(get_webhook_conversation_handler())
 
     # Main Menu Reply Keyboard Handlers
+    app.add_handler(MessageHandler(filters.Regex("^📱 مینی‌اپ"), miniapp_menu_handler))
     app.add_handler(MessageHandler(filters.Regex("^💳 حساب‌ها و نشست‌ها$"), bank_menu_handler))
     app.add_handler(MessageHandler(filters.Regex("^👛 کیف پول و اعتبار$"), wallet_menu_handler))
     app.add_handler(MessageHandler(filters.Regex("^📊 گزارش تراکنش‌ها$"), list_transactions_handler))

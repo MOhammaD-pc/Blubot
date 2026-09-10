@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}بلوبات | درگاه کارت‌به‌کارت هوشمند و لحظه‌ای{% endblock %}</title>
+    <!-- Vazirmatn Font CDN -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+    <style>
+        :root {
+            --bg-main: #0b0f19;
+            --bg-card: #131b2e;
+            --bg-card-hover: #19243d;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Vazirmatn', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        /* Navbar */
+        .navbar {
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 14px 24px;
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+            font-size: 20px;
+            font-weight: 800;
+        }
+        .logo-badge {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            list-style: none;
+        }
+        .nav-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: white;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+        }
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+        .btn-outline {
+            background: transparent;
+            color: white;
+            border: 1px solid var(--border-color);
+        }
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        /* Main Container */
+        .main-content {
+            flex: 1;
+        }
+        /* Footer */
+        .footer {
+            background: #070a12;
+            border-top: 1px solid var(--border-color);
+            padding: 40px 24px 20px;
+            margin-top: 60px;
+        }
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 40px;
+        }
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 30px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        @media (max-width: 768px) {
+            .footer-container { grid-template-columns: 1fr; gap: 24px; }
+            .nav-links { display: none; }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/static/BluBot-Logo.webp" alt="BluBot Logo" style="height: 38px; width: auto; border-radius: 8px; vertical-align: middle;">
+                <span>بلوبات</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/" class="nav-link">صفحه اصلی</a></li>
+                <li><a href="/documentation" class="nav-link">مستندات API</a></li>
+                <li><a href="/dashboard" class="nav-link">داشبورد پذیرنده</a></li>
+                <li><a href="https://t.me/{{ bot_username or 'BluBot' }}" target="_blank" class="nav-link">ربات تلگرام</a></li>
+            </ul>
+            <div style="display: flex; gap: 10px;">
+                <a href="/login" class="btn btn-outline btn-sm">ورود به پنل</a>
+                <a href="https://t.me/{{ bot_username or 'BluBot' }}?start=signup" target="_blank" class="btn btn-primary btn-sm">📱 ثبت‌نام در مینی‌اپ</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Page Body -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div>
+                <div class="nav-logo" style="margin-bottom: 12px;">
+                    <img src="/static/BluBot-Logo.webp" alt="BluBot Logo" style="height: 34px; width: auto; border-radius: 8px; vertical-align: middle;">
+                    <span>بلوبات | درگاه کارت‌به‌کارت لحظه‌ای</span>
+                </div>
+                <p style="color: var(--text-muted); font-size: 14px; max-width: 420px; line-height: 1.8;">
+                    بلوبات واسط هوشمند بین کارت بانکی شما و اپلیکیشن شماست. با بهره‌گیری از نشست فعال وب بلوبانک، تراکنش‌های واریزی بدون نیاز به فورواردر پیامک یا گوشی اختصاصی، در همان لحظه تأیید می‌شوند.
+                </p>
+            </div>
+            <div>
+                <h4 style="color: white; margin-bottom: 14px;">لینک‌های مفید</h4>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+                    <li><a href="/documentation" style="color: var(--text-muted); text-decoration: none;">مستندات توسعه‌دهندگان</a></li>
+                    <li><a href="/dashboard" style="color: var(--text-muted); text-decoration: none;">پنل مدیریت پذیرندگان</a></li>
+                    <li><a href="/#pricing" style="color: var(--text-muted); text-decoration: none;">تعرفه و کارمزد</a></li>
+                    <li><a href="/#faq" style="color: var(--text-muted); text-decoration: none;">سوالات متداول</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 style="color: white; margin-bottom: 14px;">پشتیبانی و ارتباط</h4>
+                <ul style="list-style: none; display: flex; flex-direction: column; gap: 8px; font-size: 14px;">
+                    <li><a href="https://t.me/{{ bot_username or 'BluBot' }}" target="_blank" style="color: var(--text-muted); text-decoration: none;">ربات پشتیبانی تلگرام</a></li>
+                    <li><a href="/admin" style="color: var(--text-muted); text-decoration: none;">پنل مدیریت کل</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            تمامی حقوق محفوظ است © ۱۴۰۵ بلوبات (BluBot) — پلتفرم هوشمند پرداخت کارت‌به‌کارت
+        </div>
+    </footer>
+
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

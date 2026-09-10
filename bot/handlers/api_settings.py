@@ -25,7 +25,7 @@ async def api_settings_menu_handler(update: Update, context: ContextTypes.DEFAUL
     webhook_display = f"<code>{user.webhook_url}</code>" if user.webhook_url else "<i>تنظیم نشده</i>"
 
     msg = (
-        "🔑 <b>تنظیمات وب‌سرویس و API بلوپال</b>\n\n"
+        "🔑 <b>تنظیمات وب‌سرویس و API بلوبات</b>\n\n"
         "از این اطلاعات می‌توانید برای اتصال فروشگاه ووکامرس یا اسکریپت‌های خود استفاده کنید:\n\n"
         f"🌐 <b>آدرس پایه API:</b>\n<code>{config.BASE_URL}/api/v1</code>\n\n"
         f"🟢 <b>کلید زنده (Live Key):</b>\n<code>{user.api_key_live}</code>\n\n"
@@ -52,7 +52,7 @@ async def start_set_webhook(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     await query.edit_message_text(
         "🌐 لطفاً آدرس اینترنتی وب‌هوک سرور خود را ارسال فرمایید:\n"
-        "(مثال: <code>https://myshop.com/api/blupal/webhook</code>)\n\n"
+        "(مثال: <code>https://myshop.com/api/blubot/webhook</code>)\n\n"
         "برای لغو /cancel را ارسال فرمایید.",
         parse_mode="HTML"
     )
