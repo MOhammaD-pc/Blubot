@@ -20,7 +20,7 @@ SERVER_PORT = int(os.getenv("PORT") or os.getenv("SERVER_PORT", "8000"))
 
 def _clean_base_url(url: str) -> str:
     if not url:
-        return "http://localhost:8000"
+        return "https://pay.8cloud.ir"
     url = url.strip().rstrip("/")
     if not (url.startswith("http://") or url.startswith("https://")):
         if "localhost" in url or "127.0.0.1" in url:
@@ -32,7 +32,7 @@ def _clean_base_url(url: str) -> str:
         url = "https://" + url[7:]
     return url
 
-BASE_URL = _clean_base_url(os.getenv("BASE_URL", "http://localhost:8000"))
+BASE_URL = _clean_base_url(os.getenv("BASE_URL", "https://pay.8cloud.ir"))
 
 # Security & Encryption Key (Fernet 32-byte urlsafe base64)
 # If not set, generate or use fallback for development

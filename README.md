@@ -85,7 +85,7 @@ git push -u origin main
 | :--- | :--- | :--- |
 | `BOT_TOKEN` | `7123456789:AAH...` | توکن ربات تلگرام دریافتی از BotFather@ |
 | `ADMIN_TELEGRAM_ID` | `123456789` | آیدی عددی تلگرام شما برای دسترسی به پنل مدیریت |
-| `BASE_URL` | `https://pay.yourdomain.com` | آدرس دامنه شما (یا دامنه رایگان Railway) |
+| `BASE_URL` | `https://pay.8cloud.ir` | آدرس دامنه شما (یا دامنه رایگان Railway) |
 | `ENCRYPTION_KEY` | *(تولید کلید تصادفی)* | کلید رمزنگاری AES نشست‌های بانکی |
 | `DEFAULT_FEE_PERCENT` | `2.0` | درصد کارمزد پیش‌فرض پلتفرم |
 | `DEFAULT_FEE_CAP` | `350000` | سقف کارمزد هر تراکنش (به ریال) |
@@ -99,7 +99,7 @@ git push -u origin main
 1. در داشبورد سرویس خود در Railway، به تب **Settings** بروید.
 2. به بخش **Networking** یا **Public Networking** بروید.
 3. روی دکمه **Custom Domain** کلیک کنید.
-4. دامنه یا ساب‌دامنه مد نظر خود را وارد کنید (مثلاً `pay.yourdomain.com`).
+4. دامنه یا ساب‌دامنه مد نظر خود را وارد کنید (مثلاً `pay.8cloud.ir`).
 5. ریلوی به شما یک رکورد **CNAME** می‌دهد (مثلاً `something.up.railway.app`).
 6. وارد پنل مدیریت دامنه خود (مثل Cloudflare یا پنل هاست خود) شوید و رکورد CNAME را ثبت کنید:
    * **Type:** `CNAME`
@@ -107,7 +107,7 @@ git push -u origin main
    * **Target:** رکوردی که ریلوی داده است.
    *(اگر از Cloudflare استفاده می‌کنید، حالت پروکسی ابر نارنجی را خاموش یا روشن بگذارید، هر دو پشتیبانی می‌شود).*
 7. ریلوی ظرف ۲ الی ۵ دقیقه گواهی امنیتی SSL رایگان (Let's Encrypt) صادر می‌کند و سایت با `https` فعال می‌شود!
-8. در نهایت در تب **Variables** مقدار `BASE_URL` را برابر با دامنه جدید خود قرار دهید (مثلاً `https://pay.yourdomain.com`).
+8. در نهایت در تب **Variables** مقدار `BASE_URL` را برابر با دامنه جدید خود قرار دهید (مثلاً `https://pay.8cloud.ir`).
 
 ---
 
@@ -153,7 +153,7 @@ python main.py
 
 ### ایجاد فاکتور (Create Invoice)
 ```bash
-curl -X POST "https://pay.yourdomain.com/api/v1/invoices/create" \
+curl -X POST "https://pay.8cloud.ir/api/v1/invoices/create" \
   -H "Content-Type: application/json" \
   -H "X-API-Key: blu_live_YOUR_KEY" \
   -d '{"amount": 1000000}'
@@ -167,7 +167,7 @@ curl -X POST "https://pay.yourdomain.com/api/v1/invoices/create" \
   "amount": 1000000,
   "final_amount": 1000245,
   "status": "PENDING",
-  "payment_link": "https://pay.yourdomain.com/payment/01ARZ3NDEKTSV4RRFFQ69G5FAV",
+  "payment_link": "https://pay.8cloud.ir/payment/01ARZ3NDEKTSV4RRFFQ69G5FAV",
   "card_number": "6219861012345678",
   "mode": "live",
   "expires_at": "2026-09-10T06:30:00+03:30"
