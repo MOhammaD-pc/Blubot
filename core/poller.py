@@ -54,11 +54,37 @@ async def run_transaction_poller():
 
                     except Exception as sess_err:
                         logger.debug(f"Error polling session {session.id}: {sess_err}")
+                        if "401" in str(sess_err) or "Unauthorized" in str(sess_err):
+                            session.status = "EXPIRED"
+                            await db.commit()
+                            user = await db.get(User, session.user_id)
+                            if user and _bot_instance:
+                                await _notify_session_expired(user, session)
 
         except Exception as e:
             logger.error(f"Poller loop iteration error: {e}")
 
         await asyncio.sleep(config.POLL_INTERVAL_SECONDS)
+
+async def _notify_session_expired(user: User, session):
+    """Sends real-time notification to merchant when bank session expires."""
+    try:
+        if not _bot_instance:
+            return
+        card_fmt = " ".join([session.card_number[i:i+4] for i in range(0, len(session.card_number), 4)])
+        msg = (
+            "⚠️ <b>هشدار مهم: نشست بلوبانک شما نیاز به ورود مجدد دارد!</b>\n\n"
+            f"💳 <b>شماره کارت:</b> <code>{card_fmt}</code>\n"
+            "🔴 <b>وضعیت:</b> نشست در بلوبانک منقضی گردید یا از داخل همراه بانک خارج شدید.\n\n"
+            "جهت تداوم تایید خودکار واریزی‌ها و دریافت وب‌هوک، لطفاً وارد <b>مینی‌اپ بلوبات</b> شده و نشست خود را مجدداً متصل فرمایید."
+        )
+        await _bot_instance.send_message(
+            chat_id=user.telegram_id,
+            text=msg,
+            parse_mode="HTML"
+        )
+    except Exception as err:
+        logger.error(f"Failed to send expiration alert to user {user.telegram_id}: {err}")
 
 async def _notify_merchant_telegram(user: User, invoice, fee_charged: int, is_low_balance: bool):
     """Sends real-time Telegram receipt and notification to the merchant."""

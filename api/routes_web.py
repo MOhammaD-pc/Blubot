@@ -1,7 +1,7 @@
 import datetime
 from pathlib import Path
 from fastapi import APIRouter, Request, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, FileResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,6 +43,34 @@ async def documentation_page(request: Request):
             "base_url": config.BASE_URL,
             "bot_username": config.BOT_USERNAME
         }
+    )
+
+@router.get("/wordpress", response_class=HTMLResponse)
+async def wordpress_page(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="wordpress.html",
+        context={
+            "base_url": config.BASE_URL,
+            "bot_username": config.BOT_USERNAME
+        }
+    )
+
+@router.get("/download/blubot-woocommerce.zip")
+async def download_woocommerce_plugin():
+    zip_path = BASE_DIR / "static" / "blubot-woocommerce.zip"
+    if not zip_path.exists():
+        # Generate on the fly if needed
+        import zipfile
+        zip_path.parent.mkdir(parents=True, exist_ok=True)
+        plugin_file = BASE_DIR / "wordpress" / "wc-blubot-gateway.php"
+        with zipfile.ZipFile(zip_path, "w") as z:
+            if plugin_file.exists():
+                z.write(plugin_file, "woocommerce-blubot/wc-blubot-gateway.php")
+    return FileResponse(
+        path=str(zip_path),
+        filename="blubot-woocommerce.zip",
+        media_type="application/zip"
     )
 
 @router.get("/miniapp", response_class=HTMLResponse)

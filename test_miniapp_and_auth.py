@@ -184,6 +184,83 @@ async def test_all():
             assert "مینی‌اپ بلوبات" in miniapp_page_resp.text
             print("✅ /miniapp rendered with 200 OK and Telegram WebApp script.")
 
+            # ----------------------------------------------------
+            # 7. Test MiniApp Bank Wizard Endpoints
+            # ----------------------------------------------------
+            print("\n[8] Testing MiniApp BluBank Connection & Session Management...")
+            # Request OTP
+            req_otp_resp = await client.post(
+                "/api/v1/miniapp/bank/request-otp",
+                json={"phone_number": "09121234567"},
+                cookies={"blupal_user_id": str(user_info["id"])}
+            )
+            assert req_otp_resp.status_code == 200, f"Expected 200, got {req_otp_resp.text}"
+            otp_data = req_otp_resp.json()
+            assert otp_data["success"] is True
+            temp_token = otp_data.get("temp_token")
+            print("✅ MiniApp BluBank OTP requested successfully.")
+
+            # Verify OTP & create active session
+            verify_otp_resp = await client.post(
+                "/api/v1/miniapp/bank/verify-otp",
+                json={
+                    "phone_number": "09121234567",
+                    "otp": "12345",
+                    "temp_token": temp_token
+                },
+                cookies={"blupal_user_id": str(user_info["id"])}
+            )
+            assert verify_otp_resp.status_code == 200, f"Expected 200, got {verify_otp_resp.text}"
+            verify_body = verify_otp_resp.json()
+            assert verify_body["success"] is True
+            assert "session" in verify_body
+            assert verify_body["session"]["card_number"].startswith("621986")
+            print(f"✅ BluBank active session established: Card={verify_body['session']['card_number']}")
+
+            # Verify session in /miniapp/data
+            data_resp = await client.get("/api/v1/miniapp/data", cookies={"blupal_user_id": str(user_info["id"])})
+            assert data_resp.status_code == 200
+            data_json = data_resp.json()
+            assert data_json["session"] is not None
+            assert data_json["session"]["card_number"] == verify_body["session"]["card_number"]
+            print("✅ /miniapp/data reflects active bank session.")
+
+            # Test Refresh session health
+            refresh_resp = await client.post(
+                "/api/v1/miniapp/bank/refresh",
+                cookies={"blupal_user_id": str(user_info["id"])}
+            )
+            assert refresh_resp.status_code == 200
+            refresh_json = refresh_resp.json()
+            assert refresh_json["success"] is True
+            print("✅ BluBank session health check/refresh succeeded.")
+
+            # Test Disconnect session
+            disc_resp = await client.post(
+                "/api/v1/miniapp/bank/disconnect",
+                cookies={"blupal_user_id": str(user_info["id"])}
+            )
+            assert disc_resp.status_code == 200
+            assert disc_resp.json()["success"] is True
+            # Confirm session removed
+            data_after_disc = await client.get("/api/v1/miniapp/data", cookies={"blupal_user_id": str(user_info["id"])})
+            assert data_after_disc.json()["session"] is None
+            print("✅ BluBank session disconnected cleanly.")
+
+            # ----------------------------------------------------
+            # 8. Test WordPress Guide & Download Endpoints
+            # ----------------------------------------------------
+            print("\n[9] Testing WordPress Plugin Guide & Download...")
+            wp_page_resp = await client.get("/wordpress")
+            assert wp_page_resp.status_code == 200
+            assert "بلوبات برای ووکامرس" in wp_page_resp.text
+            print("✅ /wordpress rendered with 200 OK.")
+
+            wp_zip_resp = await client.get("/download/blubot-woocommerce.zip")
+            assert wp_zip_resp.status_code == 200
+            assert len(wp_zip_resp.content) > 1000
+            print(f"✅ Plugin zip downloaded successfully ({len(wp_zip_resp.content)} bytes).")
+
         finally:
             config.BOT_TOKEN = old_token
 

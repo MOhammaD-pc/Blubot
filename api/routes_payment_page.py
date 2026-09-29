@@ -164,6 +164,12 @@ async def payment_page(token: str, db: AsyncSession = Depends(get_db)):
 
         <button class="copy-btn" style="background:#0284c7;" onclick="copyText('{toman_final}', 'مبلغ دقیق کپی شد!')">🔢 کپی مبلغ دقیق</button>
 
+        <button class="copy-btn" style="background: rgba(255,255,255,0.06); font-size: 13px;" onclick="toggleQr()">📱 نمایش بارکد QR کارت جهت اسکن</button>
+        <div id="qr-container" style="display: none; text-align: center; margin: 10px 0 16px 0;">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={card_clean}" alt="QR Code" style="border-radius: 12px; background: white; padding: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: inline-block;">
+            <div style="font-size: 11px; color: #94a3b8; margin-top: 6px;">اسکن با دوربین یا اپلیکیشن‌های همراه بانک</div>
+        </div>
+
         <div class="alert-text">
             ⚠️ <b>بسیار مهم:</b> لطفاً <b>دقیقاً مبلغ {toman_final:,} تومان</b> را واریز فرمایید تا پرداخت شما به صورت خودکار و در لحظه شناسایی شود.
         </div>
@@ -204,6 +210,11 @@ async def payment_page(token: str, db: AsyncSession = Depends(get_db)):
         function copyText(val, msg) {{
             navigator.clipboard.writeText(val);
             alert(msg);
+        }}
+
+        function toggleQr() {{
+            const el = document.getElementById("qr-container");
+            el.style.display = (el.style.display === "none") ? "block" : "none";
         }}
 
         // Poll for payment success

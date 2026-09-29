@@ -245,6 +245,68 @@
             text-align: center;
             margin-bottom: 16px;
         }
+        /* BluBank Connection Modal & Cards */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-sheet {
+            background: var(--tg-secondary-bg);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px 24px 0 0;
+            padding: 24px 20px 36px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+            position: relative;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .blu-card-box {
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border-radius: 18px;
+            padding: 18px 20px;
+            color: white;
+            box-shadow: 0 10px 25px rgba(2, 132, 199, 0.3);
+            margin: 12px 0 16px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .blu-card-box::after {
+            content: "BLU";
+            position: absolute;
+            right: 12px;
+            bottom: -15px;
+            font-size: 70px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.08);
+            pointer-events: none;
+        }
+        .blu-input-code {
+            direction: ltr;
+            font-size: 26px !important;
+            font-weight: bold;
+            letter-spacing: 12px;
+            text-align: center;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
@@ -317,7 +379,7 @@
         </div>
 
         <!-- Bank Connection Card -->
-        <div class="card">
+        <div class="card" id="bank-section-card">
             <div class="card-title" style="justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span>💳</span>
@@ -328,18 +390,47 @@
                     <span style="font-size: 11px; color: var(--tg-hint);">عدم اتصال</span>
                 </div>
             </div>
-            <div id="session-info-content" style="background: rgba(0,0,0,0.25); border-radius: 12px; padding: 12px; margin-top: 8px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px;">
-                    <span style="color: var(--tg-hint);">شماره کارت بلوبانک:</span>
-                    <span id="sess-card" style="font-family: monospace; font-weight: bold; direction: ltr;">-</span>
+
+            <!-- State 1: Active Session Display -->
+            <div id="session-active-box" style="display: none;">
+                <div class="blu-card-box">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <span style="font-size: 13px; font-weight: 700; opacity: 0.9;">بلوبانک • BluBank</span>
+                        <span class="badge" style="background: rgba(255,255,255,0.25); color: #fff;">🟢 نشست متصل</span>
+                    </div>
+                    <div id="sess-card-num" style="font-family: monospace; font-size: 20px; font-weight: 900; letter-spacing: 2px; direction: ltr; margin: 10px 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        6219 •••• •••• ••••
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 14px; font-size: 12px;">
+                        <div>
+                            <div style="opacity: 0.75; font-size: 11px;">نام صاحب حساب:</div>
+                            <div id="sess-holder" style="font-weight: 700; font-size: 14px;">-</div>
+                        </div>
+                        <div style="text-align: left; direction: ltr;">
+                            <div style="opacity: 0.75; font-size: 11px;">آخرین مانده استعلامی:</div>
+                            <div id="sess-balance-txt" style="font-weight: 700; font-size: 14px;">-</div>
+                        </div>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 13px;">
-                    <span style="color: var(--tg-hint);">صاحب حساب:</span>
-                    <span id="sess-owner">-</span>
+
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button class="btn btn-outline btn-sm" style="flex: 1;" onclick="refreshBankSession()">🔄 استعلام و تست سلامت</button>
+                    <button class="btn btn-outline btn-sm" style="flex: 1; border-color: rgba(239, 68, 68, 0.4); color: #f87171;" onclick="disconnectBankSession()">🗑 قطع اتصال</button>
                 </div>
             </div>
-            <div style="font-size: 11px; color: var(--tg-hint); margin-top: 8px;">
-                💡 جهت تغییر یا اتصال نشست جدید، می‌توانید از دستور /start در ربات تلگرام استفاده کنید.
+
+            <!-- State 2: No Active Session Callout -->
+            <div id="session-empty-box">
+                <div style="background: rgba(2, 132, 199, 0.1); border: 1px dashed rgba(2, 132, 199, 0.35); border-radius: 16px; padding: 16px; text-align: center; margin-top: 8px;">
+                    <div style="font-size: 32px; margin-bottom: 8px;">📲</div>
+                    <div style="font-weight: 700; font-size: 14px; color: var(--accent); margin-bottom: 4px;">حساب بلوبانک متصل نیست</div>
+                    <p style="font-size: 12px; color: var(--tg-hint); line-height: 1.6; margin-bottom: 14px;">
+                        برای اینکه سیستم بتواند واریزی‌های مشتریان را لحظه‌ای تطبیق داده و تایید کند، باید نشست وب بلوبانک خود را فعال کنید.
+                    </p>
+                    <button class="btn" style="background: linear-gradient(135deg, #0284c7, #0369a1); font-weight: 700; padding: 12px;" onclick="openBankModal()">
+                        ⚡️ ورود و فعال‌سازی نشست بلوبانک
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -418,6 +509,75 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- BluBank Login Modal (Slide-up Sheet) -->
+    <div id="bank-modal" class="modal-overlay">
+        <div class="modal-sheet">
+            <!-- Modal Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--card-border);">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 22px;">🛡</span>
+                    <div>
+                        <div style="font-weight: 700; font-size: 16px; color: var(--tg-text);">ورود امن به بلوبانک</div>
+                        <div style="font-size: 11px; color: var(--tg-hint);">ایجاد نشست فعال اختصاصی (Active Session)</div>
+                    </div>
+                </div>
+                <button onclick="closeBankModal()" style="background: none; border: none; font-size: 22px; color: var(--tg-hint); cursor: pointer; padding: 4px;">✕</button>
+            </div>
+
+            <!-- Step 1: Phone / Username Input -->
+            <div id="bank-step-1">
+                <p style="font-size: 13px; color: var(--tg-text); line-height: 1.7; margin-bottom: 14px;">
+                    شماره موبایل متصل به بلوبانک خود را وارد کنید تا کد تأیید ورود از سوی بلوبانک برای شما ارسال شود:
+                </p>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 12px; color: var(--tg-hint); margin-bottom: 6px;">شماره موبایل بلوبانک:</label>
+                    <input type="tel" id="bank-phone-input" class="form-input" placeholder="09123456789" style="direction: ltr; font-size: 16px; font-weight: bold; text-align: center; letter-spacing: 2px;">
+                </div>
+
+                <div style="background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 12px; padding: 10px 12px; font-size: 11px; color: #4ade80; line-height: 1.6; margin-bottom: 16px;">
+                    🔒 <b>امنیت بانکی تضمین‌شده:</b> کلیه توکن‌های نشست با کلید ۲۵۶ بیتی نظامی AES-256 رمزنگاری شده و صرفاً جهت استعلام واریزی‌های فاکتورها استفاده می‌گردد.
+                </div>
+
+                <button id="btn-request-otp" class="btn" style="background: linear-gradient(135deg, #0284c7, #0369a1); font-weight: 700; padding: 13px;" onclick="submitBankPhone()">
+                    دریافت کد تأیید پیامکی
+                </button>
+            </div>
+
+            <!-- Step 2: OTP Verification -->
+            <div id="bank-step-2" style="display: none;">
+                <p style="font-size: 13px; color: var(--tg-text); line-height: 1.7; margin-bottom: 6px;">
+                    کد پیامک‌شده از طرف بلوبانک به شماره <b id="otp-phone-display" style="direction: ltr; display: inline-block;"></b> را وارد نمایید:
+                </p>
+
+                <div style="margin: 16px 0;">
+                    <input type="number" id="bank-otp-input" class="form-input blu-input-code" placeholder="• • • • •" maxlength="6">
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 12px;">
+                    <span id="otp-timer-txt" style="color: var(--tg-hint);">زمان باقی‌مانده: ۶۰ ثانیه</span>
+                    <button id="btn-resend-otp" onclick="submitBankPhone()" style="background: none; border: none; color: var(--accent); cursor: pointer; display: none; font-size: 12px;">ارسال مجدد کد</button>
+                    <button onclick="backToPhoneStep()" style="background: none; border: none; color: var(--tg-hint); cursor: pointer; font-size: 12px;">ویرایش شماره</button>
+                </div>
+
+                <button id="btn-verify-otp" class="btn" style="background: linear-gradient(135deg, #22c55e, #16a34a); font-weight: 700; padding: 13px;" onclick="submitBankOtp()">
+                    ✓ تأیید کد و فعال‌سازی نشست
+                </button>
+            </div>
+
+            <!-- Step 3: Success Screen -->
+            <div id="bank-step-3" style="display: none; text-align: center; padding: 20px 0;">
+                <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+                <h3 style="font-size: 17px; color: #4ade80; margin-bottom: 8px;">نشست فعال بلوبانک متصل شد!</h3>
+                <p style="font-size: 13px; color: var(--tg-hint); margin-bottom: 16px;">
+                    از این پس کلیه واریزی‌های مشتریان به کارت بلوبانک شما به صورت خودکار پایش و تأیید خواهند شد.
+                </p>
+                <div id="success-card-info" style="font-weight: bold; font-size: 15px; margin-bottom: 16px; font-family: monospace; direction: ltr; color: var(--accent);"></div>
+                <button class="btn" onclick="closeBankModal()">بازگشت به پنل مینی‌اپ</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -545,14 +705,27 @@
 
                 // Bank Session
                 const pill = document.getElementById("session-status-pill");
+                const activeBox = document.getElementById("session-active-box");
+                const emptyBox = document.getElementById("session-empty-box");
+
                 if (session && session.status === "ACTIVE") {
                     pill.innerHTML = '<span class="status-dot dot-green"></span><span style="font-size: 11px; color: #4ade80;">متصل و فعال</span>';
-                    document.getElementById("sess-card").innerText = session.card_number;
-                    document.getElementById("sess-owner").innerText = session.account_name || "بلوبانک";
+                    const cNum = session.card_number || "";
+                    const cFmt = cNum.replace(/(\d{4})/g, '$1  ').trim();
+                    document.getElementById("sess-card-num").innerText = cFmt || "6219 •••• •••• ••••";
+                    document.getElementById("sess-holder").innerText = session.account_name || "کاربر بلوبانک";
+                    if (session.balance !== undefined && session.balance !== null) {
+                        const bToman = Math.floor(session.balance / 10);
+                        document.getElementById("sess-balance-txt").innerText = `${bToman.toLocaleString('fa-IR')} تومان`;
+                    } else {
+                        document.getElementById("sess-balance-txt").innerText = "پایش آنلاین";
+                    }
+                    activeBox.style.display = "block";
+                    emptyBox.style.display = "none";
                 } else {
                     pill.innerHTML = '<span class="status-dot dot-gray"></span><span style="font-size: 11px; color: var(--tg-hint);">عدم اتصال</span>';
-                    document.getElementById("sess-card").innerText = "کارت متصل نیست";
-                    document.getElementById("sess-owner").innerText = "-";
+                    activeBox.style.display = "none";
+                    emptyBox.style.display = "block";
                 }
 
                 // Invoices
@@ -709,6 +882,171 @@
         function copyMagicLink() {
             const url = document.getElementById("magic-url-input").value;
             copyText(url, "لینک ورود مستقیم کپی شد. آن را در مرورگر کامپیوتر خود باز کنید.");
+        }
+
+        // --- BLUBANK SESSION MODAL & HANDLERS ---
+        let bankTempToken = null;
+        let bankPhone = "";
+        let otpTimerInterval = null;
+
+        function openBankModal() {
+            if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            document.getElementById("bank-step-1").style.display = "block";
+            document.getElementById("bank-step-2").style.display = "none";
+            document.getElementById("bank-step-3").style.display = "none";
+            document.getElementById("bank-phone-input").value = "";
+            document.getElementById("bank-otp-input").value = "";
+            document.getElementById("bank-modal").classList.add("active");
+            setTimeout(() => {
+                document.getElementById("bank-phone-input").focus();
+            }, 300);
+        }
+
+        function closeBankModal() {
+            document.getElementById("bank-modal").classList.remove("active");
+            if (otpTimerInterval) clearInterval(otpTimerInterval);
+        }
+
+        function backToPhoneStep() {
+            if (otpTimerInterval) clearInterval(otpTimerInterval);
+            document.getElementById("bank-step-1").style.display = "block";
+            document.getElementById("bank-step-2").style.display = "none";
+            document.getElementById("bank-step-3").style.display = "none";
+        }
+
+        async function submitBankPhone() {
+            const phone = document.getElementById("bank-phone-input").value.trim();
+            const cleanPhone = phone.replace(/[^\d]/g, "");
+            if (cleanPhone.length < 10 || !cleanPhone.startsWith("09")) {
+                showToast("لطفاً شماره موبایل معتبر (مثال: 09123456789) وارد کنید.");
+                return;
+            }
+
+            bankPhone = cleanPhone;
+            const btn = document.getElementById("btn-request-otp");
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "⏳ در حال ارسال کد تأیید...";
+
+            try {
+                const res = await fetch("/api/v1/miniapp/bank/request-otp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ phone_number: cleanPhone })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    bankTempToken = data.temp_token;
+                    document.getElementById("otp-phone-display").innerText = cleanPhone;
+                    document.getElementById("bank-step-1").style.display = "none";
+                    document.getElementById("bank-step-2").style.display = "block";
+                    startOtpCountdown(60);
+                    showToast("کد تأیید پیامک شد.");
+                    setTimeout(() => {
+                        document.getElementById("bank-otp-input").focus();
+                    }, 300);
+                } else {
+                    showToast(data.message || "خطا در ارسال کد تأیید.");
+                }
+            } catch (err) {
+                showToast("خطا در برقراری ارتباط با سرور.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        function startOtpCountdown(seconds) {
+            if (otpTimerInterval) clearInterval(otpTimerInterval);
+            let timeLeft = seconds;
+            const timerTxt = document.getElementById("otp-timer-txt");
+            const resendBtn = document.getElementById("btn-resend-otp");
+            resendBtn.style.display = "none";
+            timerTxt.style.display = "inline";
+
+            otpTimerInterval = setInterval(() => {
+                timeLeft--;
+                timerTxt.innerText = `زمان باقی‌مانده: ${timeLeft} ثانیه`;
+                if (timeLeft <= 0) {
+                    clearInterval(otpTimerInterval);
+                    timerTxt.style.display = "none";
+                    resendBtn.style.display = "inline";
+                }
+            }, 1000);
+        }
+
+        async function submitBankOtp() {
+            const otp = document.getElementById("bank-otp-input").value.trim();
+            if (!otp || otp.length < 4) {
+                showToast("لطفاً کد تأیید ۵ یا ۶ رقمی را وارد کنید.");
+                return;
+            }
+
+            const btn = document.getElementById("btn-verify-otp");
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerText = "⏳ در حال بررسی و ثبت نشست...";
+
+            try {
+                const res = await fetch("/api/v1/miniapp/bank/verify-otp", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        phone_number: bankPhone,
+                        otp: otp,
+                        temp_token: bankTempToken
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (otpTimerInterval) clearInterval(otpTimerInterval);
+                    const sess = data.session || {};
+                    const cNum = (sess.card_number || "").replace(/(\d{4})/g, '$1  ').trim();
+                    document.getElementById("success-card-info").innerText = `${cNum} (${sess.account_name || 'بلوبانک'})`;
+                    document.getElementById("bank-step-2").style.display = "none";
+                    document.getElementById("bank-step-3").style.display = "block";
+                    showToast("نشست بلوبانک با موفقیت فعال شد!");
+                    await refreshAppData();
+                } else {
+                    showToast(data.message || "کد تأیید نامعتبر است.");
+                }
+            } catch (err) {
+                showToast("خطا در برقراری ارتباط با سرور.");
+            } finally {
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        }
+
+        async function disconnectBankSession() {
+            if (!confirm("آیا مطمئن هستید که می‌خواهید اتصال نشست بلوبانک را قطع کنید؟ تایید خودکار واریزی‌ها متوقف خواهد شد.")) return;
+            try {
+                const res = await fetch("/api/v1/miniapp/bank/disconnect", { method: "POST" });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("اتصال نشست قطع شد.");
+                    await refreshAppData();
+                }
+            } catch (err) {
+                showToast("خطا در قطع اتصال نشست.");
+            }
+        }
+
+        async function refreshBankSession() {
+            showToast("در حال استعلام وضعیت و مانده...");
+            try {
+                const res = await fetch("/api/v1/miniapp/bank/refresh", { method: "POST" });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || "نشست فعال و سالم است.");
+                    await refreshAppData();
+                } else {
+                    showToast(data.message || "نشست منقضی شده است.");
+                    await refreshAppData();
+                }
+            } catch (err) {
+                showToast("خطا در استعلام نشست.");
+            }
         }
 
         // Run auth on load

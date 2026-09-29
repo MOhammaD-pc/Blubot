@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}پلاگین ووکامرس بلوبات | درگاه کارت به کارت وردپرس{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 40px auto; padding: 0 20px;">
+    
+    <div style="text-align: center; margin-bottom: 40px;">
+        <div style="display: inline-block; font-size: 54px; margin-bottom: 12px;">🛍</div>
+        <h1 style="font-size: 32px; font-weight: 800; color: white; margin-bottom: 12px;">
+            افزونه درگاه کارت‌به‌کارت هوشمند بلوبات برای ووکامرس
+        </h1>
+        <p style="color: var(--text-muted); font-size: 16px; line-height: 1.8;">
+            بدون نیاز به حتی یک خط کدنویسی، فروشگاه ووکامرسی خود را به درگاه خودکار کارت‌به‌کارت بلوبات متصل کنید.
+        </p>
+    </div>
+
+    <!-- Download Card -->
+    <div style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(19, 27, 46, 0.95)); border: 1px solid rgba(37, 99, 235, 0.4); border-radius: 20px; padding: 30px; text-align: center; margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+        <h3 style="color: white; font-size: 20px; margin-bottom: 8px;">نسخه رسمی ۱.۰.۰ (رایگان)</h3>
+        <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">
+            سازگار با تمامی نسخه‌های وردپرس و ووکامرس (پشتیبانی از تومان و ریال)
+        </p>
+        <a href="/download/blubot-woocommerce.zip" class="btn btn-primary" style="padding: 14px 32px; font-size: 16px; font-weight: bold; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;">
+            <span>📦</span>
+            <span>دانلود افزونه ووکامرس (فایل Zip)</span>
+        </a>
+    </div>
+
+    <!-- Setup Guide Steps -->
+    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 32px; margin-bottom: 40px;">
+        <h2 style="font-size: 22px; color: white; margin-bottom: 24px;">🚀 راهنمای نصب و راه‌اندازی (۳ مرحله ساده)</h2>
+
+        <div style="margin-bottom: 24px;">
+            <h4 style="color: var(--accent); font-size: 16px; margin-bottom: 8px;">گام ۱: نصب افزونه در وردپرس</h4>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+                وارد پیشخوان وردپرس خود شوید. از منوی <b>افزونه‌ها</b> ⬅️ <b>افزودن افزونه</b> را بزنید. روی دکمه <b>بارگذاری افزونه</b> کلیک کرده و فایل زیپ دانلود شده (<code style="color: #f472b6;">blubot-woocommerce.zip</code>) را آپلود و سپس روی <b>فعال‌کردن</b> کلیک کنید.
+            </p>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <h4 style="color: var(--accent); font-size: 16px; margin-bottom: 8px;">گام ۲: دریافت کلید API از بلوبات</h4>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+                وارد مینی‌اپ یا ربات تلگرام بلوبات شوید. در بخش <b>کلیدهای API</b>، کلید زنده (<code style="color: #f472b6;">Live Key</code>) اختصاصی خود را کپی کنید.
+            </p>
+        </div>
+
+        <div>
+            <h4 style="color: var(--accent); font-size: 16px; margin-bottom: 8px;">گام ۳: پیکربندی درگاه در ووکامرس</h4>
+            <p style="color: var(--text-muted); font-size: 14px; line-height: 1.8;">
+                در پیشخوان وردپرس، به مسیر <b>ووکامرس</b> ⬅️ <b>پیکربندی</b> ⬅️ تب <b>پرداخت‌ها</b> بروید. گزینه <b>کارت‌به‌کارت هوشمند بلوبات</b> را فعال کنید، کلید API خود را ذخیره کنید. تمام! اکنون فروشگاه شما به درگاه متصل است.
+            </p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

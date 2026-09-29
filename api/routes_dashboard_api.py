@@ -18,11 +18,17 @@ from database.crud import (
     create_invoice,
     get_user_sessions,
     get_user_invoices,
-    modify_wallet_balance
+    modify_wallet_balance,
+    save_bank_session,
+    delete_session
 )
 from core.matching_engine import MatchingEngine
 from core.telegram_auth import validate_telegram_init_data, create_magic_link_token
 from api.routes_web import get_session_user_id
+from blubank.client import BluBankClient
+from blubank.crypto import encrypt_session_data
+from blubank.session_manager import SessionManager
+import core.poller as poller_module
 
 router = APIRouter(prefix="/api/v1", tags=["Dashboard AJAX"])
 
@@ -45,6 +51,16 @@ class TopupRequest(BaseModel):
 class FeeUpdateRequest(BaseModel):
     fee_percent: float
     fee_cap: int
+
+class BankOtpRequest(BaseModel):
+    phone_number: str
+    username: str | None = None
+    password: str | None = None
+
+class BankVerifyRequest(BaseModel):
+    phone_number: str
+    otp: str
+    temp_token: str | None = None
 
 @router.post("/auth/login")
 async def web_login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
@@ -338,3 +354,142 @@ async def update_user_fee(user_id: int, payload: FeeUpdateRequest, db: AsyncSess
     user.fee_cap = payload.fee_cap
     await db.commit()
     return {"success": True, "message": "Fee updated successfully"}
+
+# --- BANK SESSION ENDPOINTS (MINI APP & WEB) ---
+
+@router.post("/miniapp/bank/request-otp")
+async def miniapp_bank_request_otp(payload: BankOtpRequest, request: Request, db: AsyncSession = Depends(get_db)):
+    user_id = get_session_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    clean_phone = "".join([c for c in payload.phone_number if c.isdigit()])
+    if len(clean_phone) < 10 or not clean_phone.startswith("09"):
+        return JSONResponse({"success": False, "message": "شماره موبایل وارد شده نامعتبر است (مثال: 09121234567)"}, status_code=400)
+
+    client = BluBankClient()
+    res = await client.request_otp(clean_phone)
+    if not res.get("success"):
+        return JSONResponse({"success": False, "message": res.get("message", "ارسال کد تأیید بلوبانک با خطا مواجه شد.")}, status_code=400)
+
+    return {
+        "success": True,
+        "message": "کد تأیید با موفقیت به شماره شما ارسال گردید.",
+        "phone_number": clean_phone,
+        "temp_token": res.get("temp_token")
+    }
+
+@router.post("/miniapp/bank/verify-otp")
+async def miniapp_bank_verify_otp(payload: BankVerifyRequest, request: Request, db: AsyncSession = Depends(get_db)):
+    user_id = get_session_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    clean_phone = "".join([c for c in payload.phone_number if c.isdigit()])
+    clean_otp = payload.otp.strip()
+    if not clean_otp:
+        return JSONResponse({"success": False, "message": "لطفاً کد تأیید پیامک‌شده را وارد نمایید."}, status_code=400)
+
+    client = BluBankClient()
+    verify_res = await client.verify_otp(clean_phone, clean_otp, payload.temp_token)
+    if not verify_res.get("success"):
+        return JSONResponse({"success": False, "message": "کد تأیید نامعتبر یا منقضی شده است."}, status_code=400)
+
+    cards_info = await client.get_cards_and_accounts()
+    card_data = cards_info.get("cards", [{}])[0]
+
+    card_num = card_data.get("cardNumber", "6219861000000000")
+    sheba = card_data.get("sheba", "")
+    holder_name = card_data.get("holderName", "کاربر بلوبانک")
+    balance = card_data.get("balance", 0)
+
+    token_dict = {
+        "access_token": client.access_token,
+        "refresh_token": client.refresh_token,
+        "device_id": client.device_id,
+        "cookies": client.cookies
+    }
+    encrypted_tokens = encrypt_session_data(token_dict)
+
+    session = await save_bank_session(
+        db=db,
+        user_id=user_id,
+        phone_number=clean_phone,
+        card_number=card_num,
+        sheba_number=sheba,
+        account_name=holder_name,
+        encrypted_tokens=encrypted_tokens
+    )
+
+    # Optional: Send real-time confirmation via Telegram Bot
+    user = await db.get(User, user_id)
+    if user and poller_module._bot_instance:
+        try:
+            card_fmt = " ".join([card_num[i:i+4] for i in range(0, len(card_num), 4)])
+            await poller_module._bot_instance.send_message(
+                chat_id=user.telegram_id,
+                text=(
+                    "🎉 <b>نشست فعال بلوبانک با موفقیت در مینی‌اپ ثبت شد!</b>\n\n"
+                    f"💳 <b>شماره کارت:</b> <code>{card_fmt}</code>\n"
+                    f"👤 <b>صاحب حساب:</b> {holder_name}\n"
+                    "🟢 وضعیت: <b>فعال و در حال پایش تراکنش‌های لحظه‌ای</b>"
+                ),
+                parse_mode="HTML"
+            )
+        except Exception:
+            pass
+
+    return {
+        "success": True,
+        "message": "نشست فعال بلوبانک با موفقیت برقرار شد!",
+        "session": {
+            "card_number": card_num,
+            "account_name": holder_name,
+            "sheba_number": sheba,
+            "phone_number": clean_phone,
+            "status": "ACTIVE",
+            "balance": balance
+        }
+    }
+
+@router.post("/miniapp/bank/disconnect")
+async def miniapp_bank_disconnect(request: Request, db: AsyncSession = Depends(get_db)):
+    user_id = get_session_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    sessions = await get_user_sessions(db, user_id)
+    for s in sessions:
+        await delete_session(db, s.id)
+
+    user = await db.get(User, user_id)
+    if user and poller_module._bot_instance:
+        try:
+            await poller_module._bot_instance.send_message(
+                chat_id=user.telegram_id,
+                text="⚠️ <b>اتصال نشست بلوبانک با درخواست شما از طریق مینی‌اپ قطع شد.</b>\nجهت فعال‌سازی مجدد تایید خودکار واریزی‌ها، لطفاً نشست جدید ثبت فرمایید.",
+                parse_mode="HTML"
+            )
+        except Exception:
+            pass
+
+    return {"success": True, "message": "نشست بلوبانک با موفقیت قطع گردید."}
+
+@router.post("/miniapp/bank/refresh")
+async def miniapp_bank_refresh(request: Request, db: AsyncSession = Depends(get_db)):
+    user_id = get_session_user_id(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    sessions = await get_user_sessions(db, user_id)
+    if not sessions:
+        return {"success": False, "message": "هیچ نشست فعالی برای این حساب وجود ندارد."}
+
+    session = sessions[0]
+    is_valid = await SessionManager.refresh_and_validate(db, session)
+    return {
+        "success": is_valid,
+        "status": session.status,
+        "last_balance": session.last_balance,
+        "message": "وضعیت نشست با موفقیت بروزرسانی شد." if is_valid else "نشست بلوبانک منقضی شده است. لطفاً مجدداً وارد شوید."
+    }
